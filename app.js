@@ -1,42 +1,12 @@
-if(process.env.NODE_ENV != "production"){
-    require('dotenv').config();
-}
-
 const express = require("express");
 const app = express();
-const mongoose = require("mongoose");
 const path = require("path");
 const methodOverride = require("method-override");
 const ejsMate = require("ejs-mate");
-const ExpressError = require("./utils/ExpressError.js");
-const passport = require("passport");
-const LocalStrategy = require("passport-local");
-const User = require("./models/user.js");
-
-const listingRouter = require("./routes/listing.js");
-const reviewRouter = require("./routes/review.js");
-const userRouter = require("./routes/user.js");
 const session = require("express-session");
-const MongoStore = require('connect-mongo');
 const flash = require("connect-flash");
-const Listing = require('./models/listing.js');
-const { MongoDBStore } = require('connect-mongodb-session');
 
-const dbUrl = process.env.ATLASDB_URL;
-
-main()
-    .then((res) => {
-        console.log("Database connected successfully!");
-    })
-    .catch((err) => {
-        console.log(err);
-    });
-
-async function main() {
-    await mongoose.connect(dbUrl);
-}
-
-
+// Basic Express setup
 app.use(methodOverride("_method"));
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");
@@ -44,81 +14,264 @@ app.use(express.urlencoded({ extended: true }));
 app.engine("ejs", ejsMate);
 app.use(express.static(path.join(__dirname, "public")));
 
-
-
-
-const store = MongoStore.create({
-    mongoUrl: dbUrl,
-    crypto: {
-        secret: process.env.SECRET,
-    },
-    touchAfter: 24 * 3600,
-});
-
-store.on("error", () => {
-    console.log("ERROR in MONGO SESSION STORE", err);
-});
-
-const sessionOptions = {
-    store,
-    secret: process.env.SECRET,
-    resave: false,
-    saveUninitialized: true,
-    cookie: {
-        expires: Date.now() + 7 * 24 * 60 * 60 * 1000,
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-        httpOnly: true,
-    },
+// Session configuration
+const sessionConfig = {
+  secret: "your-secret-key",
+  resave: false,
+  saveUninitialized: true,
+  cookie: {
+    httpOnly: true,
+    expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
+    maxAge: 1000 * 60 * 60 * 24 * 7,
+  },
 };
 
-
-app.use(session(sessionOptions));
+// Setup session and flash
+app.use(session(sessionConfig));
 app.use(flash());
 
-app.use(passport.initialize());
-app.use(passport.session());
-passport.use(new LocalStrategy(User.authenticate()));
-
-passport.serializeUser(User.serializeUser());
-passport.deserializeUser(User.deserializeUser());
-
-
+// Middleware to make flash messages available to all templates
 app.use((req, res, next) => {
-    res.locals.success = req.flash("success");
-    res.locals.error = req.flash("error");
-    res.locals.currUser = req.user;
-    next();
+  res.locals.currUser = null; // Set default user state
+  res.locals.success = req.flash("success");
+  res.locals.error = req.flash("error");
+  next();
 });
 
-app.use("/listings", listingRouter);
-app.use("/listings/:id/reviews", reviewRouter);
-app.use("/", userRouter);
+// Default image for fallback
+const DEFAULT_IMAGE = {
+  url: "https://images.unsplash.com/photo-1566073771259-6a8506099945",
+  filename: "default_property",
+};
 
-app.get("/search", async (req, res) => {
-    // console.log("heree");
-    
-    const searchTerm = req.query.country;
-    console.log("Search term:", searchTerm);
+const SAMPLE_IMAGES = [
+  {
+    url: "https://images.unsplash.com/photo-1568605114967-8130f3a36994",
+    filename: "modern_house",
+  },
+  {
+    url: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6",
+    filename: "luxury_villa",
+  },
+  {
+    url: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750",
+    filename: "beach_house",
+  },
+  {
+    url: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9",
+    filename: "cozy_home",
+  },
+  {
+    url: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c",
+    filename: "modern_interior",
+  },
+  {
+    url: "https://images.unsplash.com/photo-1613490493576-7fde63acd811",
+    filename: "luxury_interior",
+  },
+  {
+    url: "https://images.unsplash.com/photo-1502005229762-cf1b2da7c5d6",
+    filename: "beach_villa",
+  },
+  {
+    url: "https://images.unsplash.com/photo-1613977257363-707ba9348227",
+    filename: "mountain_cabin",
+  },
+];
 
-    let data = await Listing.find({
-        "$or": [
-            { "country": { $regex: searchTerm, $options: 'i' } }
-        ]
-    });
+// Sample static data with embedded images
+const listings = [
+  {
+    id: 1,
+    title: "Modern Luxury Villa",
+    description: "Stunning modern villa with infinity pool",
+    price: 550,
+    location: "Beverly Hills",
+    country: "United States",
+    image: {
+      url: "https://images.unsplash.com/photo-1568605114967-8130f3a36994",
+      filename: "modern_house",
+    },
+    category: "Luxury Villa",
+    rooms: {
+      bedrooms: 4,
+      bathrooms: 3,
+    },
+    capacity: {
+      adults: 8,
+      children: 4,
+      total: 12,
+    },
+    contact: {
+      phone: "+1 234-567-8900",
+      email: "beverly.villa@example.com",
+      host: "John Smith",
+    },
+  },
+  {
+    id: 2,
+    title: "Beachfront Paradise",
+    description: "Direct beach access with private sundeck",
+    price: 450,
+    location: "Maldives",
+    country: "Maldives",
+    image: {
+      url: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6",
+      filename: "luxury_villa",
+    },
+    category: "Beach Resort",
+    rooms: {
+      bedrooms: 2,
+      bathrooms: 2,
+      livingRoom: true,
+      kitchen: true,
+    },
+    capacity: {
+      adults: 4,
+      children: 2,
+      total: 6,
+    },
+    contact: {
+      phone: "+960 123-4567",
+      email: "maldives.paradise@example.com",
+      host: "Sarah Johnson",
+    },
+  },
+  {
+    id: 3,
+    title: "Mountain View Chalet",
+    description: "Cozy chalet with breathtaking mountain views",
+    price: 300,
+    location: "Swiss Alps",
+    country: "Switzerland",
+    image: {
+      url: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750",
+      filename: "mountain_chalet",
+    },
+    category: "Mountain Retreat",
+    rooms: {
+      bedrooms: 3,
+      bathrooms: 2,
+      livingRoom: true,
+      kitchen: true,
+    },
+    capacity: {
+      adults: 6,
+      children: 3,
+      total: 9,
+    },
+    contact: {
+      phone: "+41 123 456 789",
+      email: "swiss.chalet@example.com",
+      host: "Marco Mueller",
+    },
+  },
+  {
+    id: 4,
+    title: "Urban Penthouse",
+    description: "Luxurious penthouse with city skyline views",
+    price: 600,
+    location: "Manhattan",
+    country: "United States",
+    image: {
+      url: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9",
+      filename: "urban_penthouse",
+    },
+  },
+  {
+    id: 5,
+    title: "Tropical Villa Resort",
+    description: "Private villa with tropical garden and pool",
+    price: 400,
+    location: "Bali",
+    country: "Indonesia",
+    image: {
+      url: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c",
+      filename: "tropical_villa",
+    },
+  },
+  {
+    id: 6,
+    title: "Historic Castle Suite",
+    description: "Elegant suite in restored medieval castle",
+    price: 750,
+    location: "Edinburgh",
+    country: "Scotland",
+    image: {
+      url: "https://images.unsplash.com/photo-1613490493576-7fde63acd811",
+      filename: "castle_suite",
+    },
+  },
+  {
+    id: 7,
+    title: "Seaside Cottage",
+    description: "Charming cottage with ocean views",
+    price: 280,
+    location: "Cornwall",
+    country: "United Kingdom",
+    image: {
+      url: "https://images.unsplash.com/photo-1502005229762-cf1b2da7c5d6",
+      filename: "seaside_cottage",
+    },
+  },
+  {
+    id: 8,
+    title: "Desert Oasis Villa",
+    description: "Luxury villa with private pool in the desert",
+    price: 520,
+    location: "Dubai",
+    country: "UAE",
+    image: {
+      url: "https://images.unsplash.com/photo-1613977257363-707ba9348227",
+      filename: "desert_villa",
+    },
+  },
+];
 
-    res.render("results", { listings: data, search: searchTerm });
+// Debug middleware to check listings data
+app.use((req, res, next) => {
+  console.log(`Number of listings: ${listings.length}`);
+  console.log("First listing sample:", listings[0]);
+  next();
 });
 
-app.all("*", (req, res, next) => {
-    next(new ExpressError(404, "Page Not Found!"));
+// Routes
+app.get("/", (req, res) => {
+  res.render("listings/index", { listings });
 });
 
-app.use((err, req, res, next) => {
-    let { status = 500, message = "Something Went Wrong!!" } = err;
-    res.status(status).send(message);
+app.get("/listings", (req, res) => {
+  res.render("listings/index", { listings });
 });
 
+app.get("/listings/:id", (req, res) => {
+  const listing =
+    listings.find((l) => l.id === parseInt(req.params.id)) || listings[0];
+  res.render("listings/show", { listing });
+});
 
-app.listen(8080, () => {
-    console.log("server is listening to http://localhost:8080/Listings");
+// Search route
+app.get("/search", (req, res) => {
+  const searchTerm = req.query.country || "";
+  const filteredListings = listings.filter((listing) =>
+    listing.country.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  res.render("results", { listings: filteredListings, search: searchTerm });
+});
+
+// Example of using flash messages
+app.get("/test-flash", (req, res) => {
+  req.flash("success", "This is a test success message!");
+  res.redirect("/listings");
+});
+
+// Basic error handling
+app.all("*", (req, res) => {
+  res.status(404).send("Page Not Found!");
+});
+
+// Start server
+const port = process.env.PORT || 8080;
+app.listen(port, () => {
+  console.log(`🚀 Server is running on http://localhost:${port}`);
 });

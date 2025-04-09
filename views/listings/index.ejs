@@ -1,135 +1,242 @@
-
-
 <%- layout("/layouts/boilerplate.ejs") -%>
 <body>
-    <style>
-        #filters {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-        }
+  <style>
+    #filters {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+    }
 
-        .filter {
-            text-align: center;
-            margin-right: 2rem;
-            margin-top: 1rem;
-            opacity: 0.7;
-        }
+    .filter {
+      text-align: center;
+      margin-right: 2rem;
+      margin-top: 1rem;
+      opacity: 0.7;
+    }
 
-        .filter:hover {
-            opacity: 1;
-            cursor: pointer;
-        }
+    .filter:hover {
+      opacity: 1;
+      cursor: pointer;
+    }
 
-        .filter p {
-            font-size: 0.8rem;
-        }
+    .filter p {
+      font-size: 0.8rem;
+    }
 
-        .tax-info {
-            display: none;
-        }
+    .tax-info {
+      display: none;
+    }
 
-        .tax-toggle {
-            border: 1px solid black;
-            border-radius: 1rem;
-            height: 3.5rem;
-            padding: 1rem;
-            margin-left: 5rem;
-            display: flex;
-            align-items: center;
-        }
+    .tax-toggle {
+      border: 1px solid black;
+      border-radius: 1rem;
+      height: 3.5rem;
+      padding: 1rem;
+      margin-left: 5rem;
+      display: flex;
+      align-items: center;
+    }
+  </style>
 
-    </style>
-    
-    <div id="filters">
-        <div class="filter">
-            <div><i class="fa-solid fa-fire"></i></div>
-            <p>Trending</p>
+  <div class="container mt-4 mb-4">
+    <div class="filter-section p-3 bg-light rounded shadow-sm">
+      <div class="row">
+        <div class="col-md-3">
+          <label class="form-label"
+            ><i class="fas fa-tags me-2"></i>Category</label
+          >
+          <select class="form-select">
+            <option>All Categories</option>
+            <option>Luxury Villa</option>
+            <option>Beach Resort</option>
+            <option>Mountain Retreat</option>
+          </select>
         </div>
-        <div class="filter">
-            <div><i class="fa-solid fa-bed"></i></div>
-            <p>Rooms</p>
+        <div class="col-md-3">
+          <label class="form-label"><i class="fas fa-bed me-2"></i>Rooms</label>
+          <select class="form-select">
+            <option>Any Size</option>
+            <option>1-2 Rooms</option>
+            <option>3-4 Rooms</option>
+            <option>5+ Rooms</option>
+          </select>
         </div>
-        <div class="filter">
-            <div><i class="fa-solid fa-mountain-city"></i></div>
-            <p>Iconic Cities</p>
+        <div class="col-md-3">
+          <label class="form-label"
+            ><i class="fas fa-users me-2"></i>Capacity</label
+          >
+          <select class="form-select">
+            <option>Any Size</option>
+            <option>1-2 People</option>
+            <option>3-6 People</option>
+            <option>7+ People</option>
+          </select>
         </div>
-        <div class="filter">
-            <div><i class="fa-solid fa-mountain"></i></div>
-            <p>Montains</p>
+        <div class="col-md-3">
+          <label class="form-label" style="visibility: hidden">Filter</label>
+          <button class="btn btn-success w-100">Apply Filters</button>
         </div>
-        <div class="filter">
-            <div><i class="fa-solid fa-cow"></i></div>
-            <p>Farm</p>
-        </div>        <div class="filter">
-            <div><i class="fa-brands fa-fort-awesome"></i></div>
-            <p>castle</p>
-        </div>
-        <div class="filter">
-            <div><i class="fa-solid fa-person-swimming"></i></div>
-            <p>Amazing Pools</p>
-        </div>
-        <div class="filter">
-            <div><i class="fa-solid fa-campground"></i></div>
-            <p>Camping</p>
-        </div>
-        <!-- 
+      </div>
+    </div>
+  </div>
+
+  <div id="filters">
+    <div class="filter">
+      <div><i class="fa-solid fa-fire"></i></div>
+      <p>Trending</p>
+    </div>
+    <div class="filter">
+      <div><i class="fa-solid fa-bed"></i></div>
+      <p>Rooms</p>
+    </div>
+    <div class="filter">
+      <div><i class="fa-solid fa-mountain-city"></i></div>
+      <p>Iconic Cities</p>
+    </div>
+    <div class="filter">
+      <div><i class="fa-solid fa-mountain"></i></div>
+      <p>Montains</p>
+    </div>
+    <div class="filter">
+      <div><i class="fa-solid fa-cow"></i></div>
+      <p>Farm</p>
+    </div>
+    <div class="filter">
+      <div><i class="fa-brands fa-fort-awesome"></i></div>
+      <p>castle</p>
+    </div>
+    <div class="filter">
+      <div><i class="fa-solid fa-person-swimming"></i></div>
+      <p>Amazing Pools</p>
+    </div>
+    <div class="filter">
+      <div><i class="fa-solid fa-campground"></i></div>
+      <p>Camping</p>
+    </div>
+    <!-- 
         <div class="filter">
             <div><i class="fa-solid fa-snowflake"></i></div>
             <p>Arctic</p>
         </div> -->
-        <div class="search">
-            <form action="/search" method="GET">
-                <input type="text" name="country" placeholder="Search by country">
-                <button type="submit">Search</button>
-            </form>
-        </div>
-        
-        <div class="tax-toggle">
-            <div class="form-check-reverse form-switch">
-                <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault">
-                <label class="form-check-label" for="flexSwitchCheckDefault">Display total after Taxes</label>
-              </div>
-        </div>
-    
- </div>
-    
-    <div class="row row-cols-lg-4 row-cols-md-3 row-cols-sm-1 mt-3">
-        <% for(let list of listings) { %>
-        <a href="/listings/<%= list._id %>" class="listing-link">
-            <div class="card col listing-card">
-                <img
-                    src="<%= list.image.url %>"
-                    class="card-img-top"
-                    alt="listing_image"
-                    style="height: 20rem"
-                />
-                <div class="card-img-overlay"></div>
-                <div class="card-body">
-                    <p class="card-text">
-                        <b><%= list.title %></b><br />
-                        &#8377;<%=list.price.toLocaleString("en-IN")%> / night
-                        <i class="tax-info">&nbsp; &nbsp;+18% GST</i>
-                    </p>                   
-                </div>
-            </div>
-        </a>
-        <% } %>
+    <div class="search">
+      <form action="/search" method="GET">
+        <input type="text" name="country" placeholder="Search by country" />
+        <button type="submit">Search</button>
+      </form>
     </div>
+
+    <div class="tax-toggle">
+      <div class="form-check-reverse form-switch">
+        <input
+          class="form-check-input"
+          type="checkbox"
+          role="switch"
+          id="flexSwitchCheckDefault"
+        />
+        <label class="form-check-label" for="flexSwitchCheckDefault"
+          >Display total after Taxes</label
+        >
+      </div>
+    </div>
+  </div>
+
+  <div class="container listings-grid">
+    <div class="row row-cols-lg-3 row-cols-md-2 row-cols-sm-1 gy-4">
+      <% for(let listing of listings) { %>
+      <div class="col">
+        <div class="card listing-card">
+          <div class="position-relative">
+            <img
+              src="<%= listing.image?.url || 'https://images.unsplash.com/photo-1568605114967-8130f3a36994' %>"
+              class="card-img-top"
+              alt="<%= listing.title %>"
+            />
+            <span class="category-badge position-absolute top-0 end-0 m-3">
+              <%= listing.category || 'Uncategorized' %>
+            </span>
+          </div>
+          <div class="card-body">
+            <h5 class="card-title"><%= listing.title %></h5>
+
+            <div class="mb-3">
+              <p class="price-text mb-1">
+                $<%= listing.price %>
+                <span class="text-muted" style="font-size: 0.875rem"
+                  >per night</span
+                >
+              </p>
+              <p class="location-text">
+                <i class="fas fa-map-marker-alt me-1"></i>
+                <%= listing.location %>, <%= listing.country %>
+              </p>
+            </div>
+
+            <div class="property-details p-3 bg-light rounded">
+              <div class="detail-item mb-2">
+                <i class="fas fa-door-open text-success me-2"></i>
+                <span class="fw-bold">Rooms:</span>
+                <%= listing.rooms?.bedrooms || 1 %> Bed, <%=
+                listing.rooms?.bathrooms || 1 %> Bath
+              </div>
+
+              <div class="detail-item mb-2">
+                <i class="fas fa-users text-success me-2"></i>
+                <span class="fw-bold">Capacity:</span>
+                <%= listing.capacity?.total || 2 %> total
+                <small class="text-muted">
+                  (<%= listing.capacity?.adults || 2 %> adults + <%=
+                  listing.capacity?.children || 0 %> children)
+                </small>
+              </div>
+
+              <div class="detail-item">
+                <i class="fas fa-user-circle text-success me-2"></i>
+                <span class="fw-bold">Host:</span>
+                <%= listing.contact?.host || 'Contact for details' %>
+              </div>
+            </div>
+
+            <button
+              class="btn btn-outline-success w-100 mt-3"
+              data-bs-toggle="collapse"
+              data-bs-target="#contact<%= listing.id %>"
+            >
+              <i class="fas fa-envelope me-2"></i>Contact Host
+            </button>
+
+            <div class="collapse mt-3" id="contact<%= listing.id %>">
+              <div class="contact-info">
+                <% if (listing.contact?.phone) { %>
+                <p class="mb-2">
+                  <i class="fas fa-phone text-success me-2"></i>
+                  <%= listing.contact.phone %>
+                </p>
+                <% } %> <% if (listing.contact?.email) { %>
+                <p class="mb-0">
+                  <i class="fas fa-envelope text-success me-2"></i>
+                  <%= listing.contact.email %>
+                </p>
+                <% } %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <% } %>
+    </div>
+  </div>
 </body>
 
 <script>
-    let taxSwitch = document.getElementById("flexSwitchCheckDefault");
-    taxSwitch.addEventListener("click", () => {
+  let taxSwitch = document.getElementById("flexSwitchCheckDefault");
+  taxSwitch.addEventListener("click", () => {
     let taxInfo = document.getElementsByClassName("tax-info");
-    for(info of taxInfo) {
-
-        if(info.style.display != "inline"){
-            info.style.display = "inline";
-        }
-        else{
-            info.style.display = "none";
-        }
+    for (info of taxInfo) {
+      if (info.style.display != "inline") {
+        info.style.display = "inline";
+      } else {
+        info.style.display = "none";
+      }
     }
-    });
+  });
 </script>
