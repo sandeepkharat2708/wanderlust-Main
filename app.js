@@ -9,6 +9,9 @@ const flash = require("connect-flash");
 // const Razorpay = require("razorpay");
 const { sampleListings } = require("./data.js");
 
+// Import routes
+const listingRoutes = require("./routes/listing");
+
 // Basic Express setup
 app.use(methodOverride("_method"));
 app.set("views", path.join(__dirname, "views"));
@@ -66,183 +69,11 @@ console.log("First item:", sampleListings?.[0]?.title);
 
 // Routes
 app.get("/", (req, res) => {
-  try {
-    if (!Array.isArray(sampleListings)) {
-      throw new Error("sampleListings is not an array");
-    }
-    console.log("Rendering home with", sampleListings.length, "listings");
-    res.render("listings/index", {
-      listings: sampleListings,
-      totalListings: sampleListings.length,
-    });
-  } catch (error) {
-    console.error("Error in root route:", error);
-    res.status(500).send("Something went wrong!");
-  }
-});
-
-app.get("/listings", (req, res) => {
-  try {
-    if (!Array.isArray(sampleListings)) {
-      throw new Error("sampleListings is not an array");
-    }
-    console.log("Rendering listings with", sampleListings.length, "listings");
-    res.render("listings/index", {
-      listings: sampleListings,
-      totalListings: sampleListings.length,
-    });
-  } catch (error) {
-    console.error("Error in listings route:", error);
-    res.status(500).send("Something went wrong!");
-  }
-});
-
-app.get("/listings/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    console.log("Looking for listing with ID:", id);
-
-    // Find the listing by ID (handle both string and number IDs)
-    const listing = sampleListings.find(
-      (l) =>
-        l.id.toString() === id.toString() || l._id?.toString() === id.toString()
-    );
-
-    if (!listing) {
-      console.log("No listing found for ID:", id);
-      req.flash("error", "Listing not found");
-      return res.redirect("/listings");
-    }
-
-    console.log("Found listing:", listing.title);
-    res.render("listings/show", { listing });
-  } catch (err) {
-    console.error("Error in show route:", err);
-    req.flash("error", "Error loading listing");
-    res.redirect("/listings");
-  }
-});
-
-// Search route
-app.get("/search", (req, res) => {
-  const searchTerm = req.query.country || "";
-  const filteredListings = sampleListings.filter((listing) =>
-    listing.country.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-  res.render("results", { listings: filteredListings, search: searchTerm });
-});
-
-// Example of using flash messages
-app.get("/test-flash", (req, res) => {
-  req.flash("success", "This is a test success message!");
   res.redirect("/listings");
 });
 
-// Booking routes
-app.get("/listings/:id", (req, res) => {
-  try {
-    const { id } = req.params;
-    console.log("Requested booking for listing ID:", id);
-
-    const listing = sampleListings.find((l) => l.id === parseInt(id));
-    console.log("Found listing:", listing);
-
-    if (!listing) {
-      console.log("No listing found for ID:", id);
-      return res.status(404).send("Listing not found");
-    }
-
-    res.render("listings", { listing });
-  } catch (err) {
-    console.error("Error in booking route:", err);
-    res.status(500).send("Error loading booking page");
-  }
-});
-
-app.post("/listings/:id", (req, res) => {
-  try {
-    const { id } = req.params;
-    const booking = req.body.booking;
-    console.log("New booking received:", booking);
-
-    // Here you would normally save the booking to your database
-
-    req.flash("success", "Booking confirmed!");
-    res.redirect(`/listings/${id}`);
-  } catch (err) {
-    console.error("Booking error:", err);
-    req.flash("error", "Failed to process booking");
-    res.redirect(`/listings/${id}`);
-  }
-});
-
-// Add this route to check what listings are available
-app.get("/debug/listings", (req, res) => {
-  res.json({
-    total: sampleListings.length,
-    listings: sampleListings.map((l) => ({
-      id: l.id,
-      title: l.title,
-    })),
-  });
-});
-
-// Add this debug route to verify your data
-app.get("/debug/data", (req, res) => {
-  res.json({
-    totalListings: sampleListings.length,
-    listings: sampleListings,
-  });
-});
-
-// Update the debug route to help troubleshoot
-app.get("/debug/listing/:id", (req, res) => {
-  const { id } = req.params;
-  const listing = sampleListings.find(
-    (l) =>
-      l.id.toString() === id.toString() || l._id?.toString() === id.toString()
-  );
-  res.json({
-    requestedId: id,
-    listingFound: !!listing,
-    listing: listing,
-    allIds: sampleListings.map((l) => ({
-      id: l.id,
-      _id: l._id,
-      title: l.title,
-    })),
-  });
-});
-
-// Comment out Razorpay initialization
-/*
-const razorpay = new Razorpay({
-  key_id: "rzp_test_YourTestKeyId",
-  key_secret: "YourTestKeySecret",
-});
-*/
-
-// Comment out payment routes
-/*
-app.post("/listings/:id/pay", async (req, res) => {
-  // ... payment code ...
-});
-
-app.post("/verify-payment", async (req, res) => {
-  // ... verification code ...
-});
-*/
-
-// Add this new route near your other routes
-app.get("/test-data", (req, res) => {
-  res.json({
-    success: true,
-    count: sampleListings.length,
-    data: sampleListings,
-    isArray: Array.isArray(sampleListings),
-    firstItem: sampleListings[0],
-  });
-});
+// Use listing routes
+app.use("/listings", listingRoutes);
 
 // Basic error handling
 app.all("*", (req, res) => {
