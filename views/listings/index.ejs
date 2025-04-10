@@ -571,23 +571,33 @@
       }
     });
 
-  // Only handle the tax toggle functionality
+  // Replace the existing tax toggle event listener with this updated version
   document.getElementById("taxToggle").addEventListener("change", function (e) {
     const showTaxes = e.target.checked;
     const priceElements = document.querySelectorAll(".price .amount");
 
     priceElements.forEach((el) => {
-      const basePrice = parseInt(
-        el.getAttribute("data-base-price") || el.textContent.replace("₹", "")
-      );
+      // Get the base price from the data attribute
+      const basePrice = parseInt(el.getAttribute("data-base-price"));
+
       if (showTaxes) {
-        // Add 18% tax
-        const withTax = Math.round(basePrice * 1.18);
+        // Add 10% tax
+        const withTax = Math.round(basePrice + basePrice * 0.1);
         el.textContent = `₹${withTax}`;
+        // Add a small indicator that tax is included
+        el.innerHTML = `₹${withTax} <small class="text-muted">(incl. tax)</small>`;
       } else {
         // Show base price
         el.textContent = `₹${basePrice}`;
       }
+    });
+  });
+
+  // Make sure this code runs when the page loads to set initial data-base-price
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".price .amount").forEach((el) => {
+      const basePrice = parseInt(el.textContent.replace("₹", "").trim());
+      el.setAttribute("data-base-price", basePrice);
     });
   });
 
@@ -605,11 +615,5 @@
       const filterType = this.textContent.trim();
       console.log("Selected filter:", filterType);
     });
-  });
-
-  // When rendering each listing card, add data-base-price attribute
-  document.querySelectorAll(".price .amount").forEach((el) => {
-    const basePrice = el.textContent.replace("₹", "");
-    el.setAttribute("data-base-price", basePrice);
   });
 </script>
