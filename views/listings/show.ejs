@@ -102,12 +102,59 @@
             <!-- User Controls - Only visible to logged-in non-owners -->
             <% if(currentUser && !listing.owner._id.equals(currentUser._id)) { %>
               <div class="booking-section mt-3">
-                <button 
-                  id="rzp-button1" 
-                  class="btn btn-success btn-lg w-100"
-                >
-                  <i class="fas fa-credit-card me-2"></i>Pay ₹<%= listing.price %>
-                </button>
+                <% if(currentUser) { %>
+                  <% if(!listing.owner._id.equals(currentUser._id)) { %>
+                    <form id="bookingForm">
+                      <div class="row g-3">
+                        <div class="col-md-6">
+                          <label class="form-label">Check-in</label>
+                          <input type="date" class="form-control" id="checkIn" required>
+                        </div>
+                        <div class="col-md-6">
+                          <label class="form-label">Check-out</label>
+                          <input type="date" class="form-control" id="checkOut" required>
+                        </div>
+                        <div class="col-12">
+                          <label class="form-label">Number of Guests</label>
+                          <div class="input-group">
+                            <input 
+                              type="number" 
+                              class="form-control" 
+                              id="guests" 
+                              min="1" 
+                              max="<%= listing.capacity %>" 
+                              value="1" 
+                              required
+                            >
+                            <span class="input-group-text">/ <%= listing.capacity %> max</span>
+                          </div>
+                          <div class="form-text">Maximum capacity: <%= listing.capacity %> guests</div>
+                        </div>
+
+                        <!-- Price Breakdown Card -->
+                        <div class="col-12">
+                          <div class="card bg-light">
+                            <div class="card-body">
+                              <h5>Price Details</h5>
+                              <div id="priceBreakdown"></div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="col-12">
+                          <button 
+                            type="submit" 
+                            class="btn btn-success w-100 btn-lg"
+                            id="bookNowBtn"
+                            disabled
+                          >
+                            Book Now
+                          </button>
+                        </div>
+                      </div>
+                    </form>
+                  <% } %>
+                <% } %>
               </div>
             <% } else if(!currentUser) { %>
               <a href="/login" class="btn btn-outline-success btn-lg w-100 mb-3">
@@ -262,6 +309,16 @@
                 <option value="<%= i %>"><%= i %></option>
               <% } %>
             </select>
+          </div>
+          <div class="col-12 mb-3">
+            <div class="card bg-light">
+              <div class="card-body">
+                <h5>Price Details</h5>
+                <div id="priceBreakdown">
+                  <!-- Will be populated by JavaScript -->
+                </div>
+              </div>
+            </div>
           </div>
         </form>
       </div>
@@ -496,6 +553,59 @@
   .alert {
     z-index: 1000;
   }
+
+  .price-details {
+    font-size: 0.95rem;
+  }
+
+  .price-details hr {
+    margin: 0.75rem 0;
+  }
+
+  .price-details .fw-bold {
+    font-size: 1.1rem;
+    color: #28a745;
+  }
+
+  #priceBreakdown {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .input-group-text {
+    background-color: #e9ecef;
+    color: #6c757d;
+  }
+
+  .form-text {
+    color: #6c757d;
+    font-size: 0.875rem;
+  }
+
+  .alert {
+    margin-bottom: 0;
+  }
+
+  .price-details {
+    font-size: 0.95rem;
+  }
+
+  .price-details .d-flex {
+    margin-bottom: 0.5rem;
+  }
+
+  .price-details hr {
+    margin: 0.75rem 0;
+  }
+
+  .price-details .fw-bold {
+    color: #28a745;
+    font-size: 1.1rem;
+  }
 </style>
 
 <script>
@@ -536,45 +646,163 @@
   });
 </script>
 
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
 <script>
-// Only initialize payment if the button exists
-const paymentButton = document.getElementById('rzp-button1');
+const basePrice = <%= listing.price %>;
+const maxGuests = <%= listing.capacity %>;
+let totalAmount = 0;
 
-if (paymentButton) {
-  paymentButton.onclick = async function(e) {
-    e.preventDefault();
-    
-    const options = {
-      key: "<%= process.env.RAZORPAY_KEY_ID %>",
-      amount: <%= listing.price * 100 %>,
-      currency: "INR",
-      name: "<%= listing.title %>",
-      description: "Booking Payment",
-      handler: function(response) {
-        alert("Payment Success! Payment ID: " + response.razorpay_payment_id);
-        window.location.href = "/listings/<%= listing._id %>";
-      },
-      prefill: {
-        name: "<%= currentUser ? currentUser.username : '' %>",
-        email: "<%= currentUser ? currentUser.email : '' %>",
-        contact: "9999999999"
-      },
-      theme: {
-        color: "#3399cc"
-      }
-    };
+function calculatePrice() {
+  const checkIn = new Date(document.getElementById('checkIn').value);
+  const checkOut = new Date(document.getElementById('checkOut').value);
+  const guests = parseInt(document.getElementById('guests').value) || 1;
+  const bookNowBtn = document.getElementById('bookNowBtn');
 
-    try {
-      const rzp1 = new Razorpay(options);
-      rzp1.on('payment.failed', function (response){
-        alert("Payment Failed! " + response.error.description);
-      });
-      rzp1.open();
-    } catch (error) {
-      console.error("Payment Error:", error);
-      alert("Payment initialization failed. Please try again.");
+  // Validate guests number
+  if (guests > maxGuests) {
+    document.getElementById('priceBreakdown').innerHTML = `
+      <div class="alert alert-danger">
+        Maximum ${maxGuests} guests allowed for this property
+      </div>
+    `;
+    bookNowBtn.disabled = true;
+    return;
+  }
+
+  if (checkIn && checkOut && checkIn < checkOut) {
+    const days = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
+    totalAmount = basePrice * days * guests;
+
+    document.getElementById('priceBreakdown').innerHTML = `
+      <div class="price-details">
+        <div class="d-flex justify-content-between mb-2">
+          <span>Base price per night</span>
+          <span>₹${basePrice}</span>
+        </div>
+        <div class="d-flex justify-content-between mb-2">
+          <span>Number of nights</span>
+          <span>${days} nights</span>
+        </div>
+        <div class="d-flex justify-content-between mb-2">
+          <span>Number of guests</span>
+          <span>${guests} of ${maxGuests} max</span>
+        </div>
+        <div class="d-flex justify-content-between mb-2">
+          <span>Total (₹${basePrice} × ${days} nights × ${guests} guests)</span>
+          <span>₹${totalAmount}</span>
+        </div>
+        <hr>
+        <div class="d-flex justify-content-between fw-bold">
+          <span>Final Amount</span>
+          <span>₹${totalAmount}</span>
+        </div>
+      </div>
+    `;
+    bookNowBtn.disabled = false;
+  } else {
+    document.getElementById('priceBreakdown').innerHTML = `
+      <div class="alert alert-info">
+        Please select valid dates to see price details
+      </div>
+    `;
+    bookNowBtn.disabled = true;
+  }
+}
+
+// Add event listener for guests input
+document.getElementById('guests')?.addEventListener('input', function() {
+  if (this.value > maxGuests) {
+    this.value = maxGuests;
+    alert(`Maximum ${maxGuests} guests allowed for this property`);
+  }
+  if (this.value < 1) {
+    this.value = 1;
+  }
+  calculatePrice();
+});
+
+// Keep your existing date input initialization and other event listeners
+
+// Update the Razorpay options to include guest capacity info
+document.getElementById('bookingForm')?.addEventListener('submit', function(e) {
+  e.preventDefault();
+
+  const guests = parseInt(document.getElementById('guests').value);
+  if (guests > maxGuests) {
+    alert(`Cannot book for more than ${maxGuests} guests`);
+    return;
+  }
+
+  const options = {
+    key: "<%= process.env.RAZORPAY_KEY_ID %>",
+    amount: totalAmount * 100,
+    currency: "INR",
+    name: "<%= listing.title %>",
+    description: `Booking for ${guests} guests (Max capacity: ${maxGuests})`,
+    prefill: {
+      name: "<%= currentUser ? currentUser.username : '' %>",
+      email: "<%= currentUser ? currentUser.email : '' %>",
+      contact: "9999999999"
+    },
+    theme: {
+      color: "#3399cc"
+    },
+    handler: function(response) {
+      createBooking(response.razorpay_payment_id);
     }
   };
+
+  try {
+    const rzp = new Razorpay(options);
+    rzp.on('payment.failed', function(response) {
+      alert('Payment failed! ' + response.error.description);
+    });
+    rzp.open();
+  } catch (error) {
+    console.error('Razorpay Error:', error);
+    alert('Payment initialization failed. Please try again.');
+  }
+});
+
+// Update createBooking function to include capacity check
+function createBooking(paymentId) {
+  const guests = parseInt(document.getElementById('guests').value);
+  
+  if (guests > maxGuests) {
+    alert(`Cannot book for more than ${maxGuests} guests`);
+    return;
+  }
+
+  const bookingData = {
+    listingId: '<%= listing._id %>',
+    checkIn: document.getElementById('checkIn').value,
+    checkOut: document.getElementById('checkOut').value,
+    guests: guests,
+    totalAmount: totalAmount,
+    paymentId: paymentId
+  };
+
+  fetch('/bookings/create', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(bookingData)
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      alert('Booking successful! Your booking ID is: ' + data.booking.id);
+      window.location.href = '/listings';
+    } else {
+      alert('Booking failed! Please try again.');
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('Booking failed! Please try again.');
+  });
 }
 </script>
 
