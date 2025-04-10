@@ -84,8 +84,8 @@
                     required
                     min="0"
                   />
+                  <div class="invalid-feedback">Please provide a valid price.</div>
                 </div>
-                <div class="invalid-feedback">Please provide a valid price.</div>
               </div>
 
               <div class="col-md-4 mb-3">
@@ -97,6 +97,7 @@
                   class="form-control"
                   value="<%= listing.location %>"
                 />
+                <div class="form-text">Optional: Enter location details</div>
               </div>
 
               <div class="col-md-4 mb-3">
@@ -117,7 +118,7 @@
           <div class="mb-4">
             <h5 class="text-muted mb-3">Property Details</h5>
             <div class="row">
-              <div class="col-md-6 mb-3">
+              <div class="col-md-4 mb-3">
                 <label for="capacity" class="form-label">Max Guests</label>
                 <input
                   type="number"
@@ -125,11 +126,13 @@
                   id="capacity"
                   class="form-control"
                   value="<%= listing.capacity %>"
+                  placeholder="Number of guests"
+                  required
                   min="1"
                 />
               </div>
 
-              <div class="col-md-6 mb-3">
+              <div class="col-md-4 mb-3">
                 <label for="rooms" class="form-label">Number of Rooms</label>
                 <input
                   type="number"
@@ -137,6 +140,8 @@
                   id="rooms"
                   class="form-control"
                   value="<%= listing.rooms %>"
+                  placeholder="Number of rooms"
+                  required
                   min="1"
                 />
               </div>
@@ -159,6 +164,7 @@
                   pattern="[0-9]{10}"
                 />
                 <div class="form-text">10-digit mobile number</div>
+                <div class="invalid-feedback">Please provide a valid 10-digit phone number.</div>
               </div>
 
               <div class="col-md-6 mb-3">
@@ -170,12 +176,13 @@
                   class="form-control"
                   value="<%= listing.email %>"
                 />
+                <div class="form-text">Optional: Enter contact email</div>
               </div>
             </div>
           </div>
 
           <div class="d-grid gap-2">
-            <button type="submit" class="btn btn-success">Update Listing</button>
+            <button type="submit" class="btn btn-dark w-100">Update Listing</button>
             <a href="/listings/<%= listing._id %>" class="btn btn-outline-secondary">Cancel</a>
           </div>
         </form>
@@ -186,16 +193,88 @@
 
 <script>
   (() => {
-    'use strict'
-    const forms = document.querySelectorAll('.needs-validation')
-    Array.from(forms).forEach(form => {
-      form.addEventListener('submit', event => {
-        if (!form.checkValidity()) {
-          event.preventDefault()
-          event.stopPropagation()
-        }
-        form.classList.add('was-validated')
-      }, false)
-    })
-  })()
+    "use strict";
+
+    // Fetch all forms that need validation
+    const forms = document.querySelectorAll(".needs-validation");
+
+    // Loop over them and prevent submission
+    Array.from(forms).forEach((form) => {
+      form.addEventListener(
+        "submit",
+        (event) => {
+          if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+
+          // Additional validation
+          const phone = form.querySelector("#phone");
+          if (phone && !/^[0-9]{10}$/.test(phone.value)) {
+            event.preventDefault();
+            phone.setCustomValidity(
+              "Please enter a valid 10-digit phone number"
+            );
+          } else if (phone) {
+            phone.setCustomValidity("");
+          }
+
+          form.classList.add("was-validated");
+        },
+        false
+      );
+    });
+  })();
 </script>
+
+<style>
+  .card {
+    border: none;
+    border-radius: 15px;
+    margin-bottom: 2rem;
+  }
+
+  .card-body {
+    padding: 2rem;
+  }
+
+  .form-label {
+    font-weight: 500;
+    color: #4a5568;
+  }
+
+  .form-control,
+  .form-select {
+    border-radius: 8px;
+    padding: 0.75rem;
+    border: 1px solid #e2e8f0;
+  }
+
+  .form-control:focus,
+  .form-select:focus {
+    border-color: #2d3748;
+    box-shadow: 0 0 0 0.2rem rgba(45, 55, 72, 0.25);
+  }
+
+  .btn-dark {
+    padding: 0.75rem 2rem;
+    font-weight: 500;
+    border-radius: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .text-muted {
+    color: #4a5568 !important;
+  }
+
+  .shadow {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+      0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+  }
+
+  .input-group-text {
+    background-color: #f8f9fa;
+    border: 1px solid #e2e8f0;
+  }
+</style>
