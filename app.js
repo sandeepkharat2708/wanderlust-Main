@@ -97,26 +97,23 @@ app.get("/listings", (req, res) => {
   }
 });
 
-app.get("/listings/:id", (req, res) => {
+app.get("/listings/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    console.log("Requested listing ID:", id);
+    console.log("Looking for listing:", id);
 
-    // Convert id to zero-based index
-    const listingIndex = parseInt(id) - 1;
-    const listing = sampleListings[listingIndex];
-
-    console.log("Found listing:", listing ? "yes" : "no");
+    // Find the listing by ID
+    const listing = sampleListings.find((l) => l.id === id);
 
     if (!listing) {
-      console.log("Listing not found for ID:", id);
+      console.log("Listing not found");
       return res.redirect("/listings");
     }
 
-    // Render the show template
+    console.log("Found listing:", listing.title);
     res.render("listings/show", { listing });
   } catch (err) {
-    console.error("Error in show route:", err);
+    console.error("Error:", err);
     res.redirect("/listings");
   }
 });

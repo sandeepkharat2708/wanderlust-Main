@@ -136,7 +136,7 @@
 
           <!-- Book Now Button -->
           <div class="card-footer">
-            <a href="/listings/<%= index + 1 %>" class="btn btn-book w-100">
+            <a href="/listings/<%= listing.id %>" class="btn btn-book w-100">
               Book Now
             </a>
           </div>
@@ -529,147 +529,117 @@
 </style>
 
 <script>
-  // Add this search functionality at the top of your existing script
-  document
-    .querySelector(".search-input")
-    .addEventListener("input", function (e) {
-      const searchTerm = e.target.value.toLowerCase().trim();
-      const listingCards = document.querySelectorAll(".listing-card");
+  // Global variable to track current filter
+  let currentFilter = "trending";
 
-      listingCards.forEach((card) => {
-        const title = card
-          .querySelector(".card-title")
-          .textContent.toLowerCase();
-        const location = card
-          .querySelector(".location")
-          .textContent.toLowerCase();
-        const parent = card.closest(".col");
+  // Function to filter listings based on search and category
+  function filterListings() {
+    const searchTerm = document
+      .querySelector(".search-input")
+      .value.toLowerCase()
+      .trim();
+    const listingCards = document.querySelectorAll(".listing-card");
 
-        // Check if the search term matches title or location
-        if (title.includes(searchTerm) || location.includes(searchTerm)) {
-          parent.style.display = ""; // Show the card
-        } else {
-          parent.style.display = "none"; // Hide the card
-        }
-      });
+    listingCards.forEach((card) => {
+      const parent = card.closest(".col");
+      const title = card.querySelector(".card-title").textContent.toLowerCase();
+      const location = card
+        .querySelector(".location")
+        .textContent.toLowerCase();
+      const category = card
+        .querySelector(".category-badge")
+        .textContent.toLowerCase();
 
-      // Show a message if no results found
-      const visibleCards = document.querySelectorAll('.col[style=""]').length;
-      const noResultsMsg = document.getElementById("no-results");
+      // Check if card matches both search term and current filter
+      const matchesSearch =
+        title.includes(searchTerm) || location.includes(searchTerm);
+      const matchesFilter =
+        currentFilter === "trending" || category.includes(currentFilter);
 
-      if (visibleCards === 0 && searchTerm !== "") {
-        if (!noResultsMsg) {
-          const msg = document.createElement("div");
-          msg.id = "no-results";
-          msg.className = "col-12 text-center py-4";
-          msg.innerHTML =
-            '<p class="text-muted">No matching properties found</p>';
-          document.querySelector(".row.row-cols-1").appendChild(msg);
-        }
-      } else if (noResultsMsg) {
-        noResultsMsg.remove();
+      if (matchesSearch && matchesFilter) {
+        parent.style.display = ""; // Show the card
+      } else {
+        parent.style.display = "none"; // Hide the card
       }
     });
 
-  // Replace the existing tax toggle event listener with this updated version
+    // Show "No results" message if no cards are visible
+    updateNoResultsMessage();
+  }
+
+  // Function to update the "No results" message
+  function updateNoResultsMessage() {
+    const visibleCards = document.querySelectorAll('.col[style=""]').length;
+    const noResultsMsg = document.getElementById("no-results");
+    const searchTerm = document.querySelector(".search-input").value.trim();
+
+    if (
+      visibleCards === 0 &&
+      (searchTerm !== "" || currentFilter !== "trending")
+    ) {
+      if (!noResultsMsg) {
+        const msg = document.createElement("div");
+        msg.id = "no-results";
+        msg.className = "col-12 text-center py-4";
+        msg.innerHTML = `<p class="text-muted">No properties found ${
+          searchTerm ? 'matching "' + searchTerm + '"' : ""
+        } ${
+          currentFilter !== "trending"
+            ? "in " + currentFilter + " category"
+            : ""
+        }</p>`;
+        document.querySelector(".row.row-cols-1").appendChild(msg);
+      }
+    } else if (noResultsMsg) {
+      noResultsMsg.remove();
+    }
+  }
+
+  // Search input event listener
+  document
+    .querySelector(".search-input")
+    .addEventListener("input", filterListings);
+
+  // Filter buttons event listener
+  document.querySelectorAll(".btn-filter").forEach((button) => {
+    button.addEventListener("click", function () {
+      // Update active button
+      document.querySelectorAll(".btn-filter").forEach((btn) => {
+        btn.classList.remove("active");
+      });
+      this.classList.add("active");
+
+      // Update current filter
+      const filterText = this.textContent.trim();
+      currentFilter = filterText.replace(/^\S+\s/, "").toLowerCase();
+
+      // Apply filtering
+      filterListings();
+    });
+  });
+
+  // Tax toggle functionality
   document.getElementById("taxToggle").addEventListener("change", function (e) {
     const showTaxes = e.target.checked;
     const priceElements = document.querySelectorAll(".price .amount");
 
     priceElements.forEach((el) => {
-      // Get the base price from the data attribute
       const basePrice = parseInt(el.getAttribute("data-base-price"));
 
       if (showTaxes) {
-        // Add 10% tax
         const withTax = Math.round(basePrice + basePrice * 0.1);
-        el.textContent = `₹${withTax}`;
-        // Add a small indicator that tax is included
         el.innerHTML = `₹${withTax} <small class="text-muted">(incl. tax)</small>`;
       } else {
-        // Show base price
         el.textContent = `₹${basePrice}`;
       }
     });
   });
 
-  // Make sure this code runs when the page loads to set initial data-base-price
+  // Initialize base prices on page load
   document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll(".price .amount").forEach((el) => {
       const basePrice = parseInt(el.textContent.replace("₹", "").trim());
       el.setAttribute("data-base-price", basePrice);
     });
   });
-
-  // Replace the existing filter button code with this updated version
-  document.querySelectorAll(".btn-filter").forEach((button) => {
-    button.addEventListener("click", function () {
-      // Remove active class from all buttons
-      document.querySelectorAll(".btn-filter").forEach((btn) => {
-        btn.classList.remove("active");
-      });
-
-      // Add active class to clicked button
-      this.classList.add("active");
-
-      // Get the filter type (remove the icon text)
-      const filterText = this.textContent.trim();
-      const filterType = filterText.replace(/^\S+\s/, "").toLowerCase();
-
-      console.log("Filtering by:", filterType);
-
-      // Get all listing cards
-      const listingCards = document.querySelectorAll(".listing-card");
-
-      listingCards.forEach((card) => {
-        const parent = card.closest(".col");
-        const category = card
-          .querySelector(".category-badge")
-          .textContent.toLowerCase();
-        const title = card
-          .querySelector(".card-title")
-          .textContent.toLowerCase();
-        const location = card
-          .querySelector(".location")
-          .textContent.toLowerCase();
-
-        if (filterType === "trending") {
-          // Show all cards for Trending
-          parent.style.display = "";
-        } else if (
-          category.includes(filterType) ||
-          title.includes(filterType) ||
-          location.includes(filterType)
-        ) {
-          parent.style.display = ""; // Show matching cards
-        } else {
-          parent.style.display = "none"; // Hide non-matching cards
-        }
-      });
-
-      // Show "No results" message if no cards are visible
-      const visibleCards = document.querySelectorAll('.col[style=""]').length;
-      const noResultsMsg = document.getElementById("no-results");
-
-      if (visibleCards === 0) {
-        if (!noResultsMsg) {
-          const msg = document.createElement("div");
-          msg.id = "no-results";
-          msg.className = "col-12 text-center py-4";
-          msg.innerHTML = `<p class="text-muted">No properties found in ${filterType} category</p>`;
-          document.querySelector(".row.row-cols-1").appendChild(msg);
-        }
-      } else if (noResultsMsg) {
-        noResultsMsg.remove();
-      }
-    });
-  });
-
-  // Add a function to clear filters
-  function clearFilters() {
-    const trendingButton = document.querySelector(".btn-filter");
-    if (trendingButton) {
-      trendingButton.click(); // Click the "Trending" button to show all
-    }
-  }
 </script>
