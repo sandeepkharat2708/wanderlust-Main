@@ -44,25 +44,25 @@
                 <i class="fas fa-fire"></i> Trending
               </button>
               <button class="btn btn-filter">
-                <i class="fas fa-mountain"></i> Mountains
+                <i class="fas fa-mountain"></i> Mountain
               </button>
               <button class="btn btn-filter">
-                <i class="fas fa-umbrella-beach"></i> Beaches
+                <i class="fas fa-water"></i> Lake
               </button>
               <button class="btn btn-filter">
-                <i class="fas fa-swimming-pool"></i> Pools
+                <i class="fas fa-umbrella-beach"></i> Beach
               </button>
               <button class="btn btn-filter">
                 <i class="fas fa-campground"></i> Camping
               </button>
               <button class="btn btn-filter">
-                <i class="fas fa-city"></i> Cities
+                <i class="fas fa-city"></i> City
               </button>
               <button class="btn btn-filter">
-                <i class="fas fa-hotel"></i> Hotels
+                <i class="fas fa-hotel"></i> Hotel
               </button>
               <button class="btn btn-filter">
-                <i class="fas fa-house"></i> Cabins
+                <i class="fas fa-house"></i> Cabin
               </button>
             </div>
           </div>
@@ -601,19 +601,75 @@
     });
   });
 
-  // Handle filter buttons
+  // Replace the existing filter button code with this updated version
   document.querySelectorAll(".btn-filter").forEach((button) => {
     button.addEventListener("click", function () {
       // Remove active class from all buttons
       document.querySelectorAll(".btn-filter").forEach((btn) => {
         btn.classList.remove("active");
       });
+
       // Add active class to clicked button
       this.classList.add("active");
 
-      // You can add filtering logic here
-      const filterType = this.textContent.trim();
-      console.log("Selected filter:", filterType);
+      // Get the filter type (remove the icon text)
+      const filterText = this.textContent.trim();
+      const filterType = filterText.replace(/^\S+\s/, "").toLowerCase();
+
+      console.log("Filtering by:", filterType);
+
+      // Get all listing cards
+      const listingCards = document.querySelectorAll(".listing-card");
+
+      listingCards.forEach((card) => {
+        const parent = card.closest(".col");
+        const category = card
+          .querySelector(".category-badge")
+          .textContent.toLowerCase();
+        const title = card
+          .querySelector(".card-title")
+          .textContent.toLowerCase();
+        const location = card
+          .querySelector(".location")
+          .textContent.toLowerCase();
+
+        if (filterType === "trending") {
+          // Show all cards for Trending
+          parent.style.display = "";
+        } else if (
+          category.includes(filterType) ||
+          title.includes(filterType) ||
+          location.includes(filterType)
+        ) {
+          parent.style.display = ""; // Show matching cards
+        } else {
+          parent.style.display = "none"; // Hide non-matching cards
+        }
+      });
+
+      // Show "No results" message if no cards are visible
+      const visibleCards = document.querySelectorAll('.col[style=""]').length;
+      const noResultsMsg = document.getElementById("no-results");
+
+      if (visibleCards === 0) {
+        if (!noResultsMsg) {
+          const msg = document.createElement("div");
+          msg.id = "no-results";
+          msg.className = "col-12 text-center py-4";
+          msg.innerHTML = `<p class="text-muted">No properties found in ${filterType} category</p>`;
+          document.querySelector(".row.row-cols-1").appendChild(msg);
+        }
+      } else if (noResultsMsg) {
+        noResultsMsg.remove();
+      }
     });
   });
+
+  // Add a function to clear filters
+  function clearFilters() {
+    const trendingButton = document.querySelector(".btn-filter");
+    if (trendingButton) {
+      trendingButton.click(); // Click the "Trending" button to show all
+    }
+  }
 </script>
