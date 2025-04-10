@@ -100,11 +100,19 @@
             </div>
           <% } else if(currentUser) { %>
             <!-- User Controls - Only visible to logged-in non-owners -->
-            <div class="user-controls mb-3">
-              <button class="btn btn-success btn-lg w-100 mb-3" data-bs-toggle="modal" data-bs-target="#bookingModal">
-                <i class="fas fa-calendar-check"></i> Book Now
+            <% if(currentUser && !listing.owner._id.equals(currentUser._id)) { %>
+              <button 
+                class="btn btn-success btn-lg w-100 mb-3" 
+                id="bookingBtn"
+                onclick="makePayment('<%= listing._id %>', <%= listing.price %>)"
+              >
+                <i class="fas fa-credit-card me-2"></i>Book Now - ₹<%= listing.price %>
               </button>
-            </div>
+            <% } else if(!currentUser) { %>
+              <a href="/login" class="btn btn-outline-success btn-lg w-100 mb-3">
+                <i class="fas fa-sign-in-alt me-2"></i>Login to Book
+              </a>
+            <% } %>
           <% } else { %>
             <!-- Guest Controls - Visible to non-logged-in users -->
             <div class="guest-controls mb-3">
@@ -263,6 +271,9 @@
     </div>
   </div>
 </div>
+
+<!-- Add Razorpay script -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
 <style>
   .show-img {
@@ -483,6 +494,10 @@
     background-color: #f8f9fa;
     border-radius: 8px;
   }
+
+  .alert {
+    z-index: 1000;
+  }
 </style>
 
 <script>
@@ -521,6 +536,89 @@
   map.on('load', function() {
     map.resize();
   });
+</script>
+
+<script>
+async function makePayment(listingId, price) {
+  try {
+    // Get order details from server
+    const response = await fetch(`/listings/${listingId}/pay`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ amount: price })
+    });
+    
+    const order = await response.json();
+    
+    if(!order.success) {
+      throw new Error(order.message);
+    }
+
+    const options = {
+      key: '<%= process.env.RAZORPAY_KEY_ID %>', // Your Razorpay Key ID
+      amount: order.amount,
+      currency: "INR",
+      name: "WanderLust",
+      description: "Property Booking Payment",
+      order_id: order.orderId,
+      handler: async function (response) {
+        try {
+          // Verify payment
+          const verifyResponse = await fetch('/verify-payment', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature
+            })
+          });
+
+          const verifyResult = await verifyResponse.json();
+
+          if(verifyResult.success) {
+            showAlert('success', 'Payment successful! Booking confirmed.');
+            setTimeout(() => {
+              window.location.href = '/listings';
+            }, 2000);
+          } else {
+            throw new Error('Payment verification failed');
+          }
+        } catch(err) {
+          showAlert('error', 'Payment verification failed. Please contact support.');
+        }
+      },
+      prefill: {
+        name: '<%= currentUser ? currentUser.username : "" %>',
+        email: '<%= currentUser ? currentUser.email : "" %>'
+      },
+      theme: {
+        color: "#2ecc71"
+      }
+    };
+
+    const razorpay = new Razorpay(options);
+    razorpay.open();
+
+  } catch(err) {
+    showAlert('error', 'Failed to initialize payment. Please try again.');
+  }
+}
+
+function showAlert(type, message) {
+  const alertDiv = document.createElement('div');
+  alertDiv.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed top-0 end-0 m-3`;
+  alertDiv.innerHTML = `
+    ${message}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  `;
+  document.body.appendChild(alertDiv);
+  setTimeout(() => alertDiv.remove(), 5000);
+}
 </script>
 
 <% layout("layouts/boilerplate") %>

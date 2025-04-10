@@ -18,6 +18,7 @@ const { sampleListings } = require("./data.js");
 const listingRouter = require("./routes/listing");
 const userRouter = require("./routes/user");
 const reviewRouter = require("./routes/review");
+const paymentRouter = require("./routes/payment");
 
 // Connect to MongoDB
 mongoose
@@ -89,6 +90,7 @@ app.use((req, res, next) => {
 app.use("/listings", listingRouter);
 app.use("/", userRouter);
 app.use("/listings/:id/reviews", reviewRouter);
+app.use("/", paymentRouter);
 
 // Home route
 app.get("/", (req, res) => {
