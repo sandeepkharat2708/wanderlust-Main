@@ -136,7 +136,9 @@
                           <div class="card bg-light">
                             <div class="card-body">
                               <h5>Price Details</h5>
-                              <div id="priceBreakdown"></div>
+                              <div id="priceBreakdown">
+                                <!-- Will be populated by JavaScript -->
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -284,47 +286,70 @@
   </div>
 </div>
 
-<!-- Booking Modal -->
-<div class="modal fade" id="bookingModal" tabindex="-1">
+<!-- Payment Simulation Modal -->
+<div class="modal fade" id="paymentModal" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Book <%= listing.title %></h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title">Complete Payment</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <form id="bookingForm">
-          <div class="mb-3">
-            <label class="form-label">Check-in Date</label>
-            <input type="date" class="form-control" required>
+        <div class="card bg-light mb-3">
+          <div class="card-body">
+            <h6>Booking Summary</h6>
+            <div id="paymentDetails"></div>
           </div>
-          <div class="mb-3">
-            <label class="form-label">Check-out Date</label>
-            <input type="date" class="form-control" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Number of Guests</label>
-            <select class="form-select">
-              <% for(let i = 1; i <= listing.capacity; i++) { %>
-                <option value="<%= i %>"><%= i %></option>
-              <% } %>
-            </select>
-          </div>
-          <div class="col-12 mb-3">
-            <div class="card bg-light">
-              <div class="card-body">
-                <h5>Price Details</h5>
-                <div id="priceBreakdown">
-                  <!-- Will be populated by JavaScript -->
-                </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <h6>Test Payment Details</h6>
+            <div class="mb-3">
+              <label class="form-label">Card Number</label>
+              <input type="text" class="form-control" value="4111 1111 1111 1111" readonly>
+            </div>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Expiry</label>
+                <input type="text" class="form-control" value="12/24" readonly>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">CVV</label>
+                <input type="text" class="form-control" value="123" readonly>
               </div>
             </div>
+            <button onclick="simulatePayment()" class="btn btn-primary w-100" id="payButton">
+              Pay ₹<span id="payAmount"></span>
+            </button>
           </div>
-        </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title">Booking Confirmed!</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="text-center mb-4">
+          <i class="fas fa-check-circle text-success" style="font-size: 3rem;"></i>
+          <h4 class="mt-3">Thank you for your booking!</h4>
+        </div>
+        <div class="card bg-light">
+          <div class="card-body">
+            <div id="bookingConfirmation"></div>
+          </div>
+        </div>
       </div>
       <div class="modal-footer">
+        <a href="/listings" class="btn btn-primary">View All Listings</a>
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-success">Confirm Booking</button>
       </div>
     </div>
   </div>
@@ -606,6 +631,94 @@
     color: #28a745;
     font-size: 1.1rem;
   }
+
+  #bookingSuccessModal .modal-body {
+    padding: 2rem;
+  }
+
+  #bookingSuccessModal .fas.fa-check-circle {
+    color: #28a745;
+  }
+
+  .booking-info {
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+  }
+
+  .booking-info p {
+    margin-bottom: 10px;
+  }
+
+  .modal-body {
+    padding: 20px;
+  }
+
+  .fas.fa-check-circle {
+    color: #28a745;
+  }
+
+  .alert-info {
+    background-color: #e8f4f8;
+    border-color: #d1ecf1;
+    color: #0c5460;
+  }
+
+  .alert-warning {
+    background-color: #fff3cd;
+    border-color: #ffeeba;
+    color: #856404;
+  }
+
+  .test-card-details .form-control {
+    background-color: #f8f9fa;
+  }
+
+  .booking-details {
+    font-size: 0.95rem;
+  }
+
+  .spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  #razorpaySimModal .modal-body {
+    padding: 2rem;
+  }
+
+  .booking-details .row {
+    margin-bottom: 0.5rem;
+  }
+
+  .booking-details .col-5 {
+    color: #6c757d;
+  }
+
+  .modal-body {
+    padding: 20px;
+  }
+
+  .card {
+    margin-bottom: 15px;
+  }
+
+  .spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .fas.fa-check-circle {
+    color: #28a745;
+  }
+
+  #paymentDetails, #bookingConfirmation {
+    font-size: 0.95rem;
+  }
+
+  .form-control[readonly] {
+    background-color: #f8f9fa;
+  }
 </style>
 
 <script>
@@ -654,131 +767,189 @@ const maxGuests = <%= listing.capacity %>;
 let totalAmount = 0;
 
 function calculatePrice() {
-  const checkIn = new Date(document.getElementById('checkIn').value);
-  const checkOut = new Date(document.getElementById('checkOut').value);
+  const checkIn = document.getElementById('checkIn').value;
+  const checkOut = document.getElementById('checkOut').value;
   const guests = parseInt(document.getElementById('guests').value) || 1;
   const bookNowBtn = document.getElementById('bookNowBtn');
 
-  // Validate guests number
-  if (guests > maxGuests) {
-    document.getElementById('priceBreakdown').innerHTML = `
-      <div class="alert alert-danger">
-        Maximum ${maxGuests} guests allowed for this property
-      </div>
-    `;
-    bookNowBtn.disabled = true;
-    return;
-  }
+  if (checkIn && checkOut) {
+    const startDate = new Date(checkIn);
+    const endDate = new Date(checkOut);
+    
+    if (startDate < endDate) {
+      const days = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
+      totalAmount = basePrice * days * guests;
 
-  if (checkIn && checkOut && checkIn < checkOut) {
-    const days = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
-    totalAmount = basePrice * days * guests;
+      // Format dates for display
+      const formattedCheckIn = startDate.toLocaleDateString('en-IN');
+      const formattedCheckOut = endDate.toLocaleDateString('en-IN');
 
+      document.getElementById('priceBreakdown').innerHTML = `
+        <div class="price-details">
+          <div class="d-flex justify-content-between mb-2">
+            <span>Base price per night</span>
+            <span>₹${basePrice.toLocaleString('en-IN')}</span>
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <span>Number of nights</span>
+            <span>${days} nights</span>
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <span>Stay period</span>
+            <span>${formattedCheckIn} to ${formattedCheckOut}</span>
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <span>Number of guests</span>
+            <span>${guests} of ${maxGuests} max</span>
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <span>Calculation</span>
+            <span>₹${basePrice} × ${days} nights × ${guests} guests</span>
+          </div>
+          <hr>
+          <div class="d-flex justify-content-between fw-bold">
+            <span>Total Amount</span>
+            <span>₹${totalAmount.toLocaleString('en-IN')}</span>
+          </div>
+        </div>
+      `;
+      bookNowBtn.disabled = false;
+    } else {
+      document.getElementById('priceBreakdown').innerHTML = `
+        <div class="alert alert-warning">
+          Check-out date must be after check-in date
+        </div>
+      `;
+      bookNowBtn.disabled = true;
+    }
+  } else {
+    // Show initial price calculation with just guests if dates aren't selected
+    const initialTotal = basePrice * guests;
     document.getElementById('priceBreakdown').innerHTML = `
       <div class="price-details">
         <div class="d-flex justify-content-between mb-2">
           <span>Base price per night</span>
-          <span>₹${basePrice}</span>
-        </div>
-        <div class="d-flex justify-content-between mb-2">
-          <span>Number of nights</span>
-          <span>${days} nights</span>
+          <span>₹${basePrice.toLocaleString('en-IN')}</span>
         </div>
         <div class="d-flex justify-content-between mb-2">
           <span>Number of guests</span>
           <span>${guests} of ${maxGuests} max</span>
         </div>
         <div class="d-flex justify-content-between mb-2">
-          <span>Total (₹${basePrice} × ${days} nights × ${guests} guests)</span>
-          <span>₹${totalAmount}</span>
+          <span>Initial calculation per night</span>
+          <span>₹${basePrice} × ${guests} guests</span>
         </div>
         <hr>
         <div class="d-flex justify-content-between fw-bold">
-          <span>Final Amount</span>
-          <span>₹${totalAmount}</span>
+          <span>Price per night</span>
+          <span>₹${initialTotal.toLocaleString('en-IN')}</span>
         </div>
-      </div>
-    `;
-    bookNowBtn.disabled = false;
-  } else {
-    document.getElementById('priceBreakdown').innerHTML = `
-      <div class="alert alert-info">
-        Please select valid dates to see price details
+        <div class="alert alert-info mt-3 mb-0">
+          Select dates to see total price
+        </div>
       </div>
     `;
     bookNowBtn.disabled = true;
   }
 }
 
-// Add event listener for guests input
-document.getElementById('guests')?.addEventListener('input', function() {
-  if (this.value > maxGuests) {
-    this.value = maxGuests;
-    alert(`Maximum ${maxGuests} guests allowed for this property`);
-  }
-  if (this.value < 1) {
-    this.value = 1;
-  }
+// Initialize date inputs and add event listeners
+document.addEventListener('DOMContentLoaded', function() {
+  const today = new Date().toISOString().split('T')[0];
+  const checkInInput = document.getElementById('checkIn');
+  const checkOutInput = document.getElementById('checkOut');
+  const guestsInput = document.getElementById('guests');
+
+  // Set minimum date for check-in
+  checkInInput.min = today;
+  
+  // Add event listeners
+  checkInInput.addEventListener('change', function() {
+    checkOutInput.min = this.value;
+    if (checkOutInput.value && checkOutInput.value < this.value) {
+      checkOutInput.value = this.value;
+    }
+    calculatePrice();
+  });
+
+  checkOutInput.addEventListener('change', calculatePrice);
+  
+  guestsInput.addEventListener('input', function() {
+    if (this.value < 1) this.value = 1;
+    if (this.value > maxGuests) {
+      this.value = maxGuests;
+      alert(`Maximum ${maxGuests} guests allowed`);
+    }
+    calculatePrice();
+  });
+
+  // Calculate initial price
   calculatePrice();
 });
 
-// Keep your existing date input initialization and other event listeners
-
-// Update the Razorpay options to include guest capacity info
-document.getElementById('bookingForm')?.addEventListener('submit', function(e) {
+// Handle form submission
+document.getElementById('bookingForm').addEventListener('submit', function(e) {
   e.preventDefault();
+  
+  const checkIn = document.getElementById('checkIn').value;
+  const checkOut = document.getElementById('checkOut').value;
+  const guests = document.getElementById('guests').value;
+  const days = Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24));
 
-  const guests = parseInt(document.getElementById('guests').value);
-  if (guests > maxGuests) {
-    alert(`Cannot book for more than ${maxGuests} guests`);
-    return;
-  }
+  // Update payment details
+  document.getElementById('paymentDetails').innerHTML = `
+    <div class="mb-2">
+      <div class="d-flex justify-content-between mb-2">
+        <span>Check-in:</span>
+        <span>${new Date(checkIn).toLocaleDateString()}</span>
+      </div>
+      <div class="d-flex justify-content-between mb-2">
+        <span>Check-out:</span>
+        <span>${new Date(checkOut).toLocaleDateString()}</span>
+      </div>
+      <div class="d-flex justify-content-between mb-2">
+        <span>Nights:</span>
+        <span>${days}</span>
+      </div>
+      <div class="d-flex justify-content-between mb-2">
+        <span>Guests:</span>
+        <span>${guests}</span>
+      </div>
+      <hr>
+      <div class="d-flex justify-content-between fw-bold">
+        <span>Total Amount:</span>
+        <span>₹${totalAmount}</span>
+      </div>
+    </div>
+  `;
 
-  const options = {
-    key: "<%= process.env.RAZORPAY_KEY_ID %>",
-    amount: totalAmount * 100,
-    currency: "INR",
-    name: "<%= listing.title %>",
-    description: `Booking for ${guests} guests (Max capacity: ${maxGuests})`,
-    prefill: {
-      name: "<%= currentUser ? currentUser.username : '' %>",
-      email: "<%= currentUser ? currentUser.email : '' %>",
-      contact: "9999999999"
-    },
-    theme: {
-      color: "#3399cc"
-    },
-    handler: function(response) {
-      createBooking(response.razorpay_payment_id);
-    }
-  };
+  // Update pay button amount
+  document.getElementById('payAmount').textContent = totalAmount;
 
-  try {
-    const rzp = new Razorpay(options);
-    rzp.on('payment.failed', function(response) {
-      alert('Payment failed! ' + response.error.description);
-    });
-    rzp.open();
-  } catch (error) {
-    console.error('Razorpay Error:', error);
-    alert('Payment initialization failed. Please try again.');
-  }
+  // Show payment modal
+  const paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
+  paymentModal.show();
 });
 
-// Update createBooking function to include capacity check
-function createBooking(paymentId) {
-  const guests = parseInt(document.getElementById('guests').value);
-  
-  if (guests > maxGuests) {
-    alert(`Cannot book for more than ${maxGuests} guests`);
-    return;
-  }
+// Simulate payment
+function simulatePayment() {
+  const payButton = document.getElementById('payButton');
+  payButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing Payment...';
+  payButton.disabled = true;
 
+  setTimeout(() => {
+    const paymentId = 'PAY_' + Date.now();
+    completeBooking(paymentId);
+  }, 2000);
+}
+
+// Complete booking after payment
+function completeBooking(paymentId) {
   const bookingData = {
     listingId: '<%= listing._id %>',
     checkIn: document.getElementById('checkIn').value,
     checkOut: document.getElementById('checkOut').value,
-    guests: guests,
+    guests: document.getElementById('guests').value,
     totalAmount: totalAmount,
     paymentId: paymentId
   };
@@ -793,8 +964,24 @@ function createBooking(paymentId) {
   .then(response => response.json())
   .then(data => {
     if (data.success) {
-      alert('Booking successful! Your booking ID is: ' + data.booking.id);
-      window.location.href = '/listings';
+      // Close payment modal
+      bootstrap.Modal.getInstance(document.getElementById('paymentModal')).hide();
+
+      // Update booking confirmation
+      document.getElementById('bookingConfirmation').innerHTML = `
+        <div class="booking-details">
+          <p><strong>Booking ID:</strong> ${data.booking.id}</p>
+          <p><strong>Check-in:</strong> ${new Date(bookingData.checkIn).toLocaleDateString()}</p>
+          <p><strong>Check-out:</strong> ${new Date(bookingData.checkOut).toLocaleDateString()}</p>
+          <p><strong>Guests:</strong> ${bookingData.guests}</p>
+          <p><strong>Amount Paid:</strong> ₹${bookingData.totalAmount}</p>
+          <p><strong>Payment ID:</strong> ${paymentId}</p>
+        </div>
+      `;
+
+      // Show success modal
+      const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+      successModal.show();
     } else {
       alert('Booking failed! Please try again.');
     }
@@ -802,6 +989,12 @@ function createBooking(paymentId) {
   .catch(error => {
     console.error('Error:', error);
     alert('Booking failed! Please try again.');
+  })
+  .finally(() => {
+    // Reset pay button
+    const payButton = document.getElementById('payButton');
+    payButton.innerHTML = `Pay ₹${totalAmount}`;
+    payButton.disabled = false;
   });
 }
 </script>

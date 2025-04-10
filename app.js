@@ -19,6 +19,7 @@ const listingRouter = require("./routes/listing");
 const userRouter = require("./routes/user");
 const reviewRouter = require("./routes/review");
 const paymentRouter = require("./routes/payment");
+const bookingRoutes = require("./routes/booking");
 
 // Connect to MongoDB
 mongoose
@@ -40,6 +41,7 @@ app.set("views", path.join(__dirname, "views"));
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride("_method"));
+app.use(express.json());
 
 // Session configuration
 const sessionConfig = {
@@ -91,6 +93,7 @@ app.use("/listings", listingRouter);
 app.use("/", userRouter);
 app.use("/listings/:id/reviews", reviewRouter);
 app.use("/", paymentRouter);
+app.use("/", bookingRoutes);
 
 // Home route
 app.get("/", (req, res) => {
