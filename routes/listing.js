@@ -31,23 +31,14 @@ router.get("/new", isLoggedIn, (req, res) => {
 // Create new listing
 router.post("/", isLoggedIn, async (req, res) => {
   try {
-    const listingData = req.body.listing;
-
-    // Add default geometry if not present
-    listingData.geometry = {
-      type: "Point",
-      coordinates: [0, 0], // Properly formatted as array of numbers
-    };
-
-    const listing = new Listing(listingData);
-    listing.owner = req.user._id;
-
-    await listing.save();
-    req.flash("success", "New listing created!");
-    res.redirect(`/listings/${listing._id}`);
+    const newListing = new Listing(req.body.listing);
+    newListing.owner = req.user._id; // Set the owner
+    await newListing.save();
+    req.flash("success", "Successfully created a new listing!");
+    res.redirect(`/listings/${newListing._id}`);
   } catch (err) {
-    console.error("Error creating listing:", err);
-    req.flash("error", "Error creating listing: " + err.message);
+    console.log(err);
+    req.flash("error", "Something went wrong!");
     res.redirect("/listings/new");
   }
 });
@@ -68,14 +59,16 @@ router.get("/", async (req, res) => {
 router.get("/:id", async (req, res) => {
   try {
     const listing = await Listing.findById(req.params.id).populate("owner");
+
     if (!listing) {
       req.flash("error", "Listing not found!");
       return res.redirect("/listings");
     }
+
     res.render("listings/show", { listing });
   } catch (err) {
-    console.error(err);
-    req.flash("error", "Cannot find this listing!");
+    console.log(err);
+    req.flash("error", "Something went wrong!");
     res.redirect("/listings");
   }
 });
@@ -107,13 +100,63 @@ router
   )
   .delete(isLoggedIn, isOwner, wrapAsync(listingController.destroyListing));
 
-// Edit Route
-router.get(
-  "/:id/edit",
-  isLoggedIn,
-  isOwner,
-  wrapAsync(listingController.renderEditForm)
-);
+// Edit route
+router.get("/:id/edit", isLoggedIn, async (req, res) => {
+  try {
+    const listing = await Listing.findById(req.params.id);
+    if (!listing) {
+      req.flash("error", "Listing not found!");
+      return res.redirect("/listings");
+    }
+
+    // Check if user is admin or owner
+    if (req.user && (req.user.isAdmin || listing.owner.equals(req.user._id))) {
+      res.render("listings/edit", { listing });
+    } else {
+      req.flash("error", "You don't have permission to do that!");
+      res.redirect(`/listings/${req.params.id}`);
+    }
+  } catch (err) {
+    console.log(err);
+    req.flash("error", "Something went wrong!");
+    res.redirect("/listings");
+  }
+});
+
+// Update route
+router.put("/:id", isLoggedIn, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const listing = await Listing.findById(id);
+
+    if (!listing) {
+      req.flash("error", "Listing not found!");
+      return res.redirect("/listings");
+    }
+
+    // Check if user is admin or owner
+    if (req.user && (req.user.isAdmin || listing.owner.equals(req.user._id))) {
+      // Add geometry data
+      if (!req.body.listing.geometry) {
+        req.body.listing.geometry = {
+          type: "Point",
+          coordinates: [0, 0],
+        };
+      }
+
+      await Listing.findByIdAndUpdate(id, { ...req.body.listing });
+      req.flash("success", "Successfully updated listing!");
+      res.redirect(`/listings/${id}`);
+    } else {
+      req.flash("error", "You don't have permission to do that!");
+      res.redirect(`/listings/${id}`);
+    }
+  } catch (err) {
+    console.log(err);
+    req.flash("error", "Something went wrong!");
+    res.redirect("/listings");
+  }
+});
 
 // Booking route
 router.post("/:id", (req, res) => {

@@ -37,24 +37,59 @@
           <div class="features mb-4">
             <h5>What this place offers</h5>
             <div class="row g-3 mt-1">
-              <% if (listing.rooms?.bedrooms) { %>
+              <!-- Rooms -->
               <div class="col-6">
                 <i class="fas fa-bed text-success"></i>
-                <%= listing.rooms.bedrooms %> Bedrooms
+                <%= listing.rooms %> Rooms
               </div>
-              <% } %> <% if (listing.rooms?.bathrooms) { %>
-              <div class="col-6">
-                <i class="fas fa-bath text-success"></i>
-                <%= listing.rooms.bathrooms %> Bathrooms
-              </div>
-              <% } %> <% if (listing.capacity?.total) { %>
+
+              <!-- Capacity -->
               <div class="col-6">
                 <i class="fas fa-users text-success"></i>
-                Up to <%= listing.capacity.total %> guests
+                Up to <%= listing.capacity %> guests
+              </div>
+
+              <!-- Phone -->
+              <div class="col-6">
+                <i class="fas fa-phone text-success"></i>
+                <%= listing.phone %>
+              </div>
+
+              <!-- Email if available -->
+              <% if(listing.email) { %>
+              <div class="col-6">
+                <i class="fas fa-envelope text-success"></i>
+                <%= listing.email %>
               </div>
               <% } %>
+
+              <!-- Price -->
+              <div class="col-6">
+                <i class="fas fa-rupee-sign text-success"></i>
+                <%= listing.price %> per night
+              </div>
+
+              <!-- Category -->
+              <div class="col-6">
+                <i class="fas fa-tag text-success"></i>
+                <%= listing.category %>
+              </div>
             </div>
           </div>
+
+          <!-- Add this after the listing details and before the map -->
+          <% if (currentUser && (currentUser.isAdmin || String(currentUser._id) === String(listing.owner))) { %>
+            <div class="admin-controls mb-3">
+              <a href="/listings/<%= listing._id %>/edit" class="btn btn-warning me-2">
+                <i class="fas fa-edit"></i> Edit Listing
+              </a>
+              <form class="d-inline" action="/listings/<%= listing._id %>?_method=DELETE" method="POST">
+                <button class="btn btn-danger">
+                  <i class="fas fa-trash"></i> Delete Listing
+                </button>
+              </form>
+            </div>
+          <% } %>
         </div>
       </div>
     </div>
@@ -168,6 +203,32 @@
     height: 500px;
     border-radius: 15px;
   }
+
+  .admin-controls {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 15px 0;
+  }
+
+  .admin-controls .btn {
+    padding: 8px 16px;
+  }
+
+  .admin-controls .btn i {
+    margin-right: 5px;
+  }
+
+  .features .col-6 {
+    padding: 10px;
+    font-size: 0.95rem;
+    color: #2d3436;
+  }
+
+  .features .col-6:hover {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+  }
 </style>
 
 <script>
@@ -175,8 +236,6 @@
   const defaultCoordinates = [77.2090, 28.6139]; // Default to Delhi coordinates
   const listingCoordinates = '<%= listing.geometry?.coordinates %>' || null;
   const coordinates = listingCoordinates ? listingCoordinates.split(',').map(Number) : defaultCoordinates;
-
-  console.log('Coordinates being used:', coordinates); // Debug log
 
   // Initialize the map
   mapboxgl.accessToken = '<%= process.env.MAP_TOKEN %>';

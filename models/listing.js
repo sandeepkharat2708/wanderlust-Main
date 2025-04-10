@@ -21,9 +21,7 @@ const listingSchema = new Schema({
     required: true,
     min: 0,
   },
-  location: {
-    type: String,
-  },
+  location: String,
   country: {
     type: String,
     required: true,
@@ -42,12 +40,12 @@ const listingSchema = new Schema({
       "Cabin",
     ],
   },
-  capacity: {
+  rooms: {
     type: Number,
     required: true,
     min: 1,
   },
-  rooms: {
+  capacity: {
     type: Number,
     required: true,
     min: 1,

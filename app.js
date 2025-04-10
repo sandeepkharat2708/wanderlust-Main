@@ -64,6 +64,14 @@ app.use((req, res, next) => {
   next();
 });
 
+// Add this middleware after your session and passport middleware
+app.use((req, res, next) => {
+  res.locals.currentUser = req.user;
+  res.locals.success = req.flash("success");
+  res.locals.error = req.flash("error");
+  next();
+});
+
 // Debug middleware to check listings data
 app.use((req, res, next) => {
   if (sampleListings) {

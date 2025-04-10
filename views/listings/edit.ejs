@@ -1,91 +1,201 @@
-<%- layout("/layouts/boilerplate.ejs") -%>
+<% layout("layouts/boilerplate") %>
+
 <div class="row mt-3">
-    <div class="col-8 offset-2">
-        <h2>Edit Listing</h2>
-        <form
-            action="/listings/<%= listing._id %>?_method=PUT"
-            method="POST"
-            novalidate
-            class="needs-validation"
-            enctype="multipart/form-data"
-        >
-            <div class="md-3">
-                <label for="listing[title]" class="form-label">Title</label>
-                <input
-                    type="text"
-                    name="listing[title]"
-                    value="<%= listing.title %>"
-                    class="form-control"
-                    required
-                />
+  <div class="col-8 offset-2">
+    <div class="card shadow">
+      <div class="card-body">
+        <h3 class="card-title text-center mb-4">Edit Listing</h3>
+        <form method="POST" action="/listings/<%= listing._id %>?_method=PUT" class="needs-validation" novalidate>
+          <!-- Basic Information -->
+          <div class="mb-4">
+            <h5 class="text-muted mb-3">Basic Information</h5>
+            <div class="mb-3">
+              <label for="title" class="form-label">Title *</label>
+              <input
+                type="text"
+                name="listing[title]"
+                id="title"
+                class="form-control"
+                value="<%= listing.title %>"
+                required
+              />
+              <div class="invalid-feedback">Please provide a title.</div>
             </div>
 
             <div class="mb-3">
-                <label for="listing[description]" class="form-label">Description</label>
+              <label for="description" class="form-label">Description *</label>
+              <textarea
+                name="listing[description]"
+                id="description"
+                class="form-control"
+                required
+              ><%= listing.description %></textarea>
+              <div class="invalid-feedback">Please provide a description.</div>
+            </div>
+          </div>
 
-                <textarea
-                    name="listing[description]"
-                    class="form-control"
-                    required
-                >
-<%= listing.description %></textarea>
+          <!-- Images and Category -->
+          <div class="mb-4">
+            <h5 class="text-muted mb-3">Images & Category</h5>
+            <div class="mb-3">
+              <label for="image" class="form-label">Image URL *</label>
+              <input
+                type="text"
+                name="listing[image][url]"
+                id="image"
+                class="form-control"
+                value="<%= listing.image.url %>"
+                required
+              />
+              <div class="invalid-feedback">Please provide an image URL.</div>
             </div>
 
             <div class="mb-3">
-                Original Listing Image<br/>
-                <img src="<%= originalImageUrl %>" alt="">
+              <label for="category" class="form-label">Category *</label>
+              <select name="listing[category]" id="category" class="form-select" required>
+                <option value="">Select a category...</option>
+                <option value="Trending" <%= listing.category === 'Trending' ? 'selected' : '' %>>Trending</option>
+                <option value="Mountains" <%= listing.category === 'Mountains' ? 'selected' : '' %>>Mountains</option>
+                <option value="Lake" <%= listing.category === 'Lake' ? 'selected' : '' %>>Lake</option>
+                <option value="Beach" <%= listing.category === 'Beach' ? 'selected' : '' %>>Beach</option>
+                <option value="Camping" <%= listing.category === 'Camping' ? 'selected' : '' %>>Camping</option>
+                <option value="City" <%= listing.category === 'City' ? 'selected' : '' %>>City</option>
+                <option value="Hotel" <%= listing.category === 'Hotel' ? 'selected' : '' %>>Hotel</option>
+                <option value="Cabin" <%= listing.category === 'Cabin' ? 'selected' : '' %>>Cabin</option>
+              </select>
+              <div class="invalid-feedback">Please select a category.</div>
             </div>
+          </div>
 
-            <div class="mb-3">
-                <label for="image" class="form-label">Upload new Image</label>
-                <input
-                    type="file"
-                    name="listing[image]"
-                    class="form-control"
-                />
-            </div>
-
+          <!-- Location Details -->
+          <div class="mb-4">
+            <h5 class="text-muted mb-3">Location Details</h5>
             <div class="row">
-                <div class="mb-3 col-md-4">
-                    <label for="listing[price]" class="form-label">Price</label>
-                    <input
-                        type="number"
-                        name="listing[price]"
-                        value="<%= listing.price %>"
-                        class="form-control"
-                        required
-                    />
-                </div>
-
-                <div class="mb-3 col-md-8">
-                    <label for="listing[country]" class="form-label"
-                        >Country</label
-                    >
-                    <input
-                        type="text"
-                        name="listing[country]"
-                        value="<%= listing.country %>"
-                        class="form-control"
-                        required
-                    />
-                </div>
-            </div>
-
-            <div class="mb-3">
-                <label for="listing[location]" class="form-label"
-                    >Location</label
-                >
-                <input
-                    type="text"
-                    name="listing[location]"
-                    value="<%= listing.location %>"
+              <div class="col-md-4 mb-3">
+                <label for="price" class="form-label">Price per night *</label>
+                <div class="input-group">
+                  <span class="input-group-text">₹</span>
+                  <input
+                    type="number"
+                    name="listing[price]"
+                    id="price"
                     class="form-control"
+                    value="<%= listing.price %>"
                     required
-                />
-            </div>
+                    min="0"
+                  />
+                </div>
+                <div class="invalid-feedback">Please provide a valid price.</div>
+              </div>
 
-            <button class="btn add-btn mt-3">Save</button>
-            <br /><br />
+              <div class="col-md-4 mb-3">
+                <label for="location" class="form-label">Location</label>
+                <input
+                  type="text"
+                  name="listing[location]"
+                  id="location"
+                  class="form-control"
+                  value="<%= listing.location %>"
+                />
+              </div>
+
+              <div class="col-md-4 mb-3">
+                <label for="country" class="form-label">Country *</label>
+                <input
+                  type="text"
+                  name="listing[country]"
+                  id="country"
+                  class="form-control"
+                  value="<%= listing.country %>"
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Property Details -->
+          <div class="mb-4">
+            <h5 class="text-muted mb-3">Property Details</h5>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="capacity" class="form-label">Max Guests</label>
+                <input
+                  type="number"
+                  name="listing[capacity]"
+                  id="capacity"
+                  class="form-control"
+                  value="<%= listing.capacity %>"
+                  min="1"
+                />
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="rooms" class="form-label">Number of Rooms</label>
+                <input
+                  type="number"
+                  name="listing[rooms]"
+                  id="rooms"
+                  class="form-control"
+                  value="<%= listing.rooms %>"
+                  min="1"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Contact Information -->
+          <div class="mb-4">
+            <h5 class="text-muted mb-3">Contact Information</h5>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="phone" class="form-label">Phone Number *</label>
+                <input
+                  type="tel"
+                  name="listing[phone]"
+                  id="phone"
+                  class="form-control"
+                  value="<%= listing.phone %>"
+                  required
+                  pattern="[0-9]{10}"
+                />
+                <div class="form-text">10-digit mobile number</div>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input
+                  type="email"
+                  name="listing[email]"
+                  id="email"
+                  class="form-control"
+                  value="<%= listing.email %>"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-success">Update Listing</button>
+            <a href="/listings/<%= listing._id %>" class="btn btn-outline-secondary">Cancel</a>
+          </div>
         </form>
+      </div>
     </div>
+  </div>
 </div>
+
+<script>
+  (() => {
+    'use strict'
+    const forms = document.querySelectorAll('.needs-validation')
+    Array.from(forms).forEach(form => {
+      form.addEventListener('submit', event => {
+        if (!form.checkValidity()) {
+          event.preventDefault()
+          event.stopPropagation()
+        }
+        form.classList.add('was-validated')
+      }, false)
+    })
+  })()
+</script>

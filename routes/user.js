@@ -21,7 +21,12 @@ router
       failureRedirect: "/login",
       failureFlash: true,
     }),
-    userController.login
+    (req, res) => {
+      req.flash("success", "Welcome back!");
+      const redirectUrl = req.session.returnTo || "/listings";
+      delete req.session.returnTo;
+      res.redirect(redirectUrl);
+    }
   );
 
 router.get("/logout", userController.logout);
