@@ -1,7 +1,7 @@
 const sampleListings = [
   {
     id: "1",
-    title: "Cozy Mountain Cabin",
+    title: "Cozy Beach House",
     description: "A beautiful cabin with scenic views of the mountains.",
     image: {
       url: "https://images.unsplash.com/photo-1566073771259-6a8506099945",
@@ -21,7 +21,7 @@ const sampleListings = [
   },
   {
     id: "2",
-    title: "Luxury Beach Villa",
+    title: "Mountain Retreat",
     description: "Stunning beachfront villa with private access to the shore.",
     image: {
       url: "https://images.unsplash.com/photo-1499793983690-e29da59ef1c2",

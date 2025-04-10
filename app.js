@@ -100,20 +100,25 @@ app.get("/listings", (req, res) => {
 app.get("/listings/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    console.log("Looking for listing:", id);
+    console.log("Looking for listing with ID:", id);
 
-    // Find the listing by ID
-    const listing = sampleListings.find((l) => l.id === id);
+    // Find the listing by ID (handle both string and number IDs)
+    const listing = sampleListings.find(
+      (l) =>
+        l.id.toString() === id.toString() || l._id?.toString() === id.toString()
+    );
 
     if (!listing) {
-      console.log("Listing not found");
+      console.log("No listing found for ID:", id);
+      req.flash("error", "Listing not found");
       return res.redirect("/listings");
     }
 
     console.log("Found listing:", listing.title);
     res.render("listings/show", { listing });
   } catch (err) {
-    console.error("Error:", err);
+    console.error("Error in show route:", err);
+    req.flash("error", "Error loading listing");
     res.redirect("/listings");
   }
 });
@@ -190,16 +195,22 @@ app.get("/debug/data", (req, res) => {
   });
 });
 
-// Add this debug route
+// Update the debug route to help troubleshoot
 app.get("/debug/listing/:id", (req, res) => {
   const { id } = req.params;
   const listing = sampleListings.find(
-    (l) => l.id === parseInt(id) || l._id === id
+    (l) =>
+      l.id.toString() === id.toString() || l._id?.toString() === id.toString()
   );
   res.json({
     requestedId: id,
-    listing: listing || null,
-    allListings: sampleListings.map((l) => ({ id: l.id, title: l.title })),
+    listingFound: !!listing,
+    listing: listing,
+    allIds: sampleListings.map((l) => ({
+      id: l.id,
+      _id: l._id,
+      title: l.title,
+    })),
   });
 });
 

@@ -136,7 +136,10 @@
 
           <!-- Book Now Button -->
           <div class="card-footer">
-            <a href="/listings/<%= listing.id %>" class="btn btn-book w-100">
+            <a
+              href="/listings/<%= listing.id || listing._id %>"
+              class="btn btn-book w-100"
+            >
               Book Now
             </a>
           </div>
