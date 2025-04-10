@@ -149,11 +149,37 @@ module.exports.updateListing = async (req, res) => {
 };
 
 module.exports.destroyListing = async (req, res) => {
-  let { id } = req.params;
-  let deletedListing = await Listing.findByIdAndDelete(id);
-  console.log(deletedListing);
-  req.flash("success", "Listing Deleted!!!");
-  res.redirect("/listings");
+  try {
+    let { id } = req.params;
+    const listing = await Listing.findById(id).populate("reviews");
+
+    if (!listing) {
+      req.flash("error", "Listing not found!");
+      return res.redirect("/listings");
+    }
+
+    // Check if user is admin or owner
+    if (req.user && (req.user.isAdmin || listing.owner.equals(req.user._id))) {
+      // Delete the listing (this will trigger the post middleware to delete reviews)
+      const deletedListing = await Listing.findByIdAndDelete(id);
+
+      if (!deletedListing) {
+        req.flash("error", "Failed to delete listing!");
+        return res.redirect("/listings");
+      }
+
+      console.log("Deleted listing and its reviews:", id);
+      req.flash("success", "Listing and its reviews deleted successfully!");
+      res.redirect("/listings");
+    } else {
+      req.flash("error", "You don't have permission to delete this listing!");
+      res.redirect(`/listings/${id}`);
+    }
+  } catch (err) {
+    console.error("Error deleting listing:", err);
+    req.flash("error", "Error deleting listing");
+    res.redirect("/listings");
+  }
 };
 
 module.exports.searchListings = async (req, res) => {

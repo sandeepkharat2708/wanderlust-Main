@@ -61,11 +61,24 @@ module.exports.validateReview = (req, res, next) => {
 };
 
 module.exports.isReviewAuthor = async (req, res, next) => {
-  let { id, reviewId } = req.params;
-  let review = await Review.findById(reviewId);
-  if (!review.author.equals(res.locals.currUser._id)) {
-    req.flash("error", "You are not the author of this review");
-    return res.redirect(`/listings/${id}`);
+  try {
+    const { id, reviewId } = req.params;
+    const review = await Review.findById(reviewId);
+
+    if (!review) {
+      req.flash("error", "Review not found");
+      return res.redirect(`/listings/${id}`);
+    }
+
+    if (!review.author.equals(req.user._id) && !req.user.isAdmin) {
+      req.flash("error", "You don't have permission to do that!");
+      return res.redirect(`/listings/${id}`);
+    }
+
+    next();
+  } catch (err) {
+    console.error("Error in isReviewAuthor middleware:", err);
+    req.flash("error", "Something went wrong!");
+    res.redirect("/listings");
   }
-  next();
 };

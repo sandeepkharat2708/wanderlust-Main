@@ -88,8 +88,13 @@ const listingSchema = new Schema({
 });
 
 listingSchema.post("findOneAndDelete", async (listing) => {
-  if (listing) {
-    await Review.deleteMany({ _id: { $in: listing.reviews } });
+  if (listing && listing.reviews && listing.reviews.length > 0) {
+    try {
+      await Review.deleteMany({ _id: { $in: listing.reviews } });
+      console.log("Deleted reviews for listing:", listing._id);
+    } catch (err) {
+      console.error("Error deleting reviews:", err);
+    }
   }
 });
 
