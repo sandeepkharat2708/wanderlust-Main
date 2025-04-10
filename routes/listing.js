@@ -58,17 +58,17 @@ router.get("/", async (req, res) => {
 // Show single listing
 router.get("/:id", async (req, res) => {
   try {
-    const listing = await Listing.findById(req.params.id).populate("owner");
-
-    if (!listing) {
-      req.flash("error", "Listing not found!");
-      return res.redirect("/listings");
-    }
-
+    const listing = await Listing.findById(req.params.id)
+      .populate("owner")
+      .populate({
+        path: "reviews",
+        populate: {
+          path: "author",
+        },
+      });
     res.render("listings/show", { listing });
   } catch (err) {
-    console.log(err);
-    req.flash("error", "Something went wrong!");
+    req.flash("error", "Cannot find this listing!");
     res.redirect("/listings");
   }
 });

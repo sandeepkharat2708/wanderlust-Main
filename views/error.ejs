@@ -1,0 +1,44 @@
+<% layout("layouts/boilerplate") %>
+
+<div class="row mt-5">
+  <div class="col-md-6 offset-md-3">
+    <div class="card shadow-sm">
+      <div class="card-body text-center">
+        <h1 class="card-title text-danger mb-3">
+          <i class="fas fa-exclamation-circle"></i>
+        </h1>
+        <h2 class="card-title mb-3"><%= err.message %></h2>
+        <% if (err.status === 404) { %>
+        <p class="text-muted">The page you're looking for doesn't exist.</p>
+        <% } else { %>
+        <p class="text-muted">Something went wrong. Please try again later.</p>
+        <% } %>
+        <a href="/listings" class="btn btn-primary">
+          <i class="fas fa-home me-1"></i> Back to Home
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .card {
+    border: none;
+    border-radius: 15px;
+  }
+
+  .fa-exclamation-circle {
+    font-size: 4rem;
+  }
+
+  .btn-primary {
+    background-color: #2ecc71;
+    border: none;
+    padding: 10px 20px;
+    margin-top: 20px;
+  }
+
+  .btn-primary:hover {
+    background-color: #27ae60;
+  }
+</style>

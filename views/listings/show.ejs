@@ -86,19 +86,125 @@
             </div>
           <% } %>
 
-          <!-- Update the edit controls section -->
+          <!-- Owner Controls - Only visible to owner or admin -->
           <% if(currentUser && (currentUser.isAdmin || listing.owner._id.equals(currentUser._id))) { %>
             <div class="admin-controls mb-3">
               <a href="/listings/<%= listing._id %>/edit" class="btn btn-warning me-2">
                 <i class="fas fa-edit"></i> Edit Listing
               </a>
               <form class="d-inline" action="/listings/<%= listing._id %>?_method=DELETE" method="POST">
-                <button class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this listing?')">
+                <button class="btn btn-danger" onclick="return confirm('Are you sure?')">
                   <i class="fas fa-trash"></i> Delete Listing
                 </button>
               </form>
             </div>
+          <% } else if(currentUser) { %>
+            <!-- User Controls - Only visible to logged-in non-owners -->
+            <div class="user-controls mb-3">
+              <button class="btn btn-success btn-lg w-100 mb-3" data-bs-toggle="modal" data-bs-target="#bookingModal">
+                <i class="fas fa-calendar-check"></i> Book Now
+              </button>
+            </div>
+          <% } else { %>
+            <!-- Guest Controls - Visible to non-logged-in users -->
+            <div class="guest-controls mb-3">
+              <a href="/login" class="btn btn-outline-success btn-lg w-100">
+                <i class="fas fa-sign-in-alt"></i> Login to Book
+              </a>
+            </div>
           <% } %>
+
+          <!-- Reviews Section -->
+          <div class="reviews-section mt-5">
+            <h3 class="mb-4">Reviews</h3>
+
+            <!-- Add Review Form -->
+            <% if(currentUser && !listing.owner._id.equals(currentUser._id)) { %>
+              <div class="card mb-4">
+                <div class="card-body">
+                  <h5 class="card-title mb-3">Add Your Review</h5>
+                  <form action="/listings/<%= listing._id %>/reviews" method="POST">
+                    <div class="mb-3">
+                      <label class="form-label">Rating</label>
+                      <div class="stars">
+                        <% for(let i = 1; i <= 5; i++) { %>
+                          <input type="radio" id="star<%= i %>" name="review[rating]" value="<%= i %>" required>
+                          <label for="star<%= i %>">★</label>
+                        <% } %>
+                      </div>
+                    </div>
+                    <div class="mb-3">
+                      <label for="comment" class="form-label">Your Review</label>
+                      <textarea 
+                        name="review[comment]" 
+                        class="form-control" 
+                        rows="3" 
+                        required
+                        placeholder="Share your experience..."
+                      ></textarea>
+                    </div>
+                    <button class="btn btn-success">Submit Review</button>
+                  </form>
+                </div>
+              </div>
+            <% } %>
+
+            <!-- Display Reviews -->
+            <div class="row">
+              <% if(listing.reviews && listing.reviews.length > 0) { %>
+                <% for(let review of listing.reviews) { %>
+                  <div class="col-md-6 mb-3">
+                    <div class="card h-100 review-card">
+                      <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                          <div class="stars-display">
+                            <% for(let i = 1; i <= 5; i++) { %>
+                              <span class="star <%= i <= review.rating ? 'filled' : '' %>">★</span>
+                            <% } %>
+                          </div>
+                          <small class="text-muted">
+                            <%= review.createdAt.toLocaleDateString("en-US", { 
+                              year: 'numeric', 
+                              month: 'short', 
+                              day: 'numeric' 
+                            }) %>
+                          </small>
+                        </div>
+                        
+                        <p class="card-text review-text"><%= review.comment %></p>
+                        
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                          <div class="reviewer-info">
+                            <i class="fas fa-user-circle me-1"></i>
+                            <span class="text-muted"><%= review.author.username %></span>
+                          </div>
+                          
+                          <% if(currentUser && (currentUser.isAdmin || review.author.equals(currentUser._id))) { %>
+                            <form action="/listings/<%= listing._id %>/reviews/<%= review._id %>?_method=DELETE" 
+                                  method="POST" 
+                                  class="d-inline">
+                              <button class="btn btn-sm btn-outline-danger">
+                                <i class="fas fa-trash"></i>
+                              </button>
+                            </form>
+                          <% } %>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                <% } %>
+              <% } else { %>
+                <div class="col-12">
+                  <div class="card">
+                    <div class="card-body text-center text-muted">
+                      <i class="fas fa-comment-slash fa-2x mb-3"></i>
+                      <p class="mb-0">No reviews yet. Be the first to review!</p>
+                    </div>
+                  </div>
+                </div>
+              <% } %>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -119,6 +225,42 @@
     <a href="/listings" class="btn btn-outline-secondary">
       <i class="fas fa-arrow-left"></i> Back to all listings
     </a>
+  </div>
+</div>
+
+<!-- Booking Modal -->
+<div class="modal fade" id="bookingModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Book <%= listing.title %></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="bookingForm">
+          <div class="mb-3">
+            <label class="form-label">Check-in Date</label>
+            <input type="date" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Check-out Date</label>
+            <input type="date" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Number of Guests</label>
+            <select class="form-select">
+              <% for(let i = 1; i <= listing.capacity; i++) { %>
+                <option value="<%= i %>"><%= i %></option>
+              <% } %>
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-success">Confirm Booking</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -235,6 +377,109 @@
   }
 
   .features .col-6:hover {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+  }
+
+  .review-card {
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+  }
+
+  .review-card:hover {
+    transform: translateY(-5px);
+  }
+
+  .stars {
+    display: inline-flex;
+    flex-direction: row-reverse;
+    gap: 0.25rem;
+  }
+
+  .stars input {
+    display: none;
+  }
+
+  .stars label {
+    font-size: 1.5rem;
+    color: #e4e5e9;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+
+  .stars label:hover,
+  .stars label:hover ~ label,
+  .stars input:checked ~ label {
+    color: #ffd700;
+  }
+
+  .stars-display {
+    display: inline-flex;
+  }
+
+  .stars-display .star {
+    font-size: 1rem;
+    color: #e4e5e9;
+  }
+
+  .stars-display .star.filled {
+    color: #ffd700;
+  }
+
+  .review-text {
+    color: #4a5568;
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+
+  .reviewer-info {
+    font-size: 0.9rem;
+  }
+
+  .btn-outline-danger {
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .btn-outline-danger:hover {
+    background-color: #dc3545;
+    color: white;
+  }
+
+  /* Add Review Form Styling */
+  .card-title {
+    color: #2d3748;
+    font-weight: 600;
+  }
+
+  textarea.form-control {
+    border: 1px solid #e2e8f0;
+    resize: none;
+  }
+
+  textarea.form-control:focus {
+    border-color: #4a5568;
+    box-shadow: 0 0 0 2px rgba(74, 85, 104, 0.2);
+  }
+
+  .btn-success {
+    background-color: #2ecc71;
+    border: none;
+    padding: 0.5rem 1.5rem;
+  }
+
+  .btn-success:hover {
+    background-color: #27ae60;
+  }
+
+  .user-controls, .guest-controls {
+    padding: 1rem;
     background-color: #f8f9fa;
     border-radius: 8px;
   }

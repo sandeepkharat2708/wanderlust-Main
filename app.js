@@ -15,33 +15,39 @@ const User = require("./models/user");
 const { sampleListings } = require("./data.js");
 
 // Import routes
-const listingRoutes = require("./routes/listing");
-const userRoutes = require("./routes/user");
+const listingRouter = require("./routes/listing");
+const userRouter = require("./routes/user");
+const reviewRouter = require("./routes/review");
 
-// MongoDB connection
+// Connect to MongoDB
 mongoose
   .connect(process.env.ATLASDB_URL)
-  .then(() => console.log("Connected to MongoDB!"))
-  .catch((err) => console.error("MongoDB Error:", err));
+  .then(() => {
+    console.log("MongoDB Connected!");
+  })
+  .catch((err) => {
+    console.log("MongoDB Connection Error!");
+    console.log(err);
+  });
 
-// View engine setup
+// Set up EJS
 app.engine("ejs", ejsMate);
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
 // Middleware
+app.use(express.static(path.join(__dirname, "public")));
 app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride("_method"));
-app.use(express.static(path.join(__dirname, "public")));
 
-// Session configuration - MUST come before passport
+// Session configuration
 const sessionConfig = {
-  secret: process.env.SECRET || "your-secret-key",
+  secret: "your-secret-key",
   resave: false,
   saveUninitialized: true,
   cookie: {
     httpOnly: true,
-    expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
+    expires: Date.now() + 1000 * 60 * 60 * 24 * 7, // 1 week
     maxAge: 1000 * 60 * 60 * 24 * 7,
   },
 };
@@ -55,16 +61,7 @@ passport.use(new LocalStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
-// Flash and user middleware
-app.use((req, res, next) => {
-  console.log("Current user:", req.user); // Debug log
-  res.locals.currUser = req.user;
-  res.locals.success = req.flash("success");
-  res.locals.error = req.flash("error");
-  next();
-});
-
-// Add this middleware after your session and passport middleware
+// Flash and locals middleware
 app.use((req, res, next) => {
   res.locals.currentUser = req.user;
   res.locals.success = req.flash("success");
@@ -89,27 +86,36 @@ app.use((req, res, next) => {
 });
 
 // Routes
+app.use("/listings", listingRouter);
+app.use("/", userRouter);
+app.use("/listings/:id/reviews", reviewRouter);
+
+// Home route
 app.get("/", (req, res) => {
   res.redirect("/listings");
 });
 
-// Use user routes
-app.use("/", userRoutes);
-
-// Use listing routes
-app.use("/listings", listingRoutes);
-
-// Error handler
-app.use((err, req, res, next) => {
-  console.error("ERROR:", err);
-  req.flash("error", "Something went wrong!");
-  res.redirect("/listings");
+// 404 handler - place this AFTER all other routes
+app.all("*", (req, res, next) => {
+  res.status(404).render("error", {
+    err: {
+      message: "Page Not Found",
+      status: 404,
+    },
+  });
 });
 
-// Start server
+// Error handler - place this last
+app.use((err, req, res, next) => {
+  const { statusCode = 500 } = err;
+  if (!err.message) err.message = "Oh No, Something Went Wrong!";
+  res.status(statusCode).render("error", { err });
+});
+
+// Port configuration
 const port = process.env.PORT || 8080;
 app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
+  console.log(`Server is running on port ${port}`);
 });
 
 // Handle process termination
