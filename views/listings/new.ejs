@@ -15,6 +15,19 @@
           class="needs-validation"
           novalidate
         >
+          <!-- Fix the geometry hidden fields -->
+          <input type="hidden" name="listing[geometry][type]" value="Point" />
+          <input
+            type="hidden"
+            name="listing[geometry][coordinates][]"
+            value="0"
+          />
+          <input
+            type="hidden"
+            name="listing[geometry][coordinates][]"
+            value="0"
+          />
+
           <!-- Basic Information -->
           <div class="mb-4">
             <h5 class="text-muted mb-3">Basic Information</h5>
@@ -68,12 +81,12 @@
                 <option value="">Select a category...</option>
                 <option value="Trending">Trending</option>
                 <option value="Mountains">Mountains</option>
-                <option value="Iconic Cities">Iconic Cities</option>
-                <option value="Castles">Castles</option>
-                <option value="Amazing Pools">Amazing Pools</option>
+                <option value="Lake">Lake</option>
+                <option value="Beach">Beach</option>
                 <option value="Camping">Camping</option>
-                <option value="Farms">Farms</option>
-                <option value="Arctic">Arctic</option>
+                <option value="City">City</option>
+                <option value="Hotel">Hotel</option>
+                <option value="Cabin">Cabin</option>
               </select>
               <div class="invalid-feedback">Please select a category.</div>
             </div>
@@ -102,15 +115,14 @@
               </div>
 
               <div class="col-md-4 mb-3">
-                <label for="location" class="form-label">Location *</label>
+                <label for="location" class="form-label">Location</label>
                 <input
                   type="text"
                   name="listing[location]"
                   id="location"
                   class="form-control"
-                  required
                 />
-                <div class="invalid-feedback">Please provide a location.</div>
+                <div class="form-text">Optional: Enter location details</div>
               </div>
 
               <div class="col-md-4 mb-3">
@@ -180,17 +192,14 @@
               </div>
 
               <div class="col-md-6 mb-3">
-                <label for="email" class="form-label">Email *</label>
+                <label for="email" class="form-label">Email</label>
                 <input
                   type="email"
                   name="listing[email]"
                   id="email"
                   class="form-control"
-                  required
                 />
-                <div class="invalid-feedback">
-                  Please provide a valid email address.
-                </div>
+                <div class="form-text">Optional: Enter contact email</div>
               </div>
             </div>
           </div>
@@ -209,7 +218,11 @@
 <script>
   (() => {
     "use strict";
+
+    // Fetch all forms that need validation
     const forms = document.querySelectorAll(".needs-validation");
+
+    // Loop over them and prevent submission
     Array.from(forms).forEach((form) => {
       form.addEventListener(
         "submit",
@@ -218,6 +231,18 @@
             event.preventDefault();
             event.stopPropagation();
           }
+
+          // Additional validation
+          const phone = form.querySelector("#phone");
+          if (phone && !/^[0-9]{10}$/.test(phone.value)) {
+            event.preventDefault();
+            phone.setCustomValidity(
+              "Please enter a valid 10-digit phone number"
+            );
+          } else if (phone) {
+            phone.setCustomValidity("");
+          }
+
           form.classList.add("was-validated");
         },
         false

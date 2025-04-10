@@ -31,37 +31,23 @@ router.get("/new", isLoggedIn, (req, res) => {
 // Create new listing
 router.post("/", isLoggedIn, async (req, res) => {
   try {
-    // Debug logs
-    console.log("User:", req.user);
-    console.log("Form data:", req.body.listing);
+    const listingData = req.body.listing;
 
-    // Create new listing object
-    const newListing = new Listing({
-      ...req.body.listing,
-      owner: req.user._id,
-      image: {
-        url: req.body.listing.image.url,
-        filename: req.body.listing.image.url.split("/").pop(), // Extract filename from URL
-      },
-    });
+    // Add default geometry if not present
+    listingData.geometry = {
+      type: "Point",
+      coordinates: [0, 0], // Properly formatted as array of numbers
+    };
 
-    // Validate listing
-    const validationError = newListing.validateSync();
-    if (validationError) {
-      console.error("Validation Error:", validationError);
-      req.flash("error", "Please fill all required fields correctly");
-      return res.redirect("/listings/new");
-    }
+    const listing = new Listing(listingData);
+    listing.owner = req.user._id;
 
-    // Save listing
-    await newListing.save();
-    console.log("New listing created:", newListing);
-
-    req.flash("success", "Successfully created new listing!");
-    res.redirect(`/listings/${newListing._id}`);
+    await listing.save();
+    req.flash("success", "New listing created!");
+    res.redirect(`/listings/${listing._id}`);
   } catch (err) {
     console.error("Error creating listing:", err);
-    req.flash("error", err.message || "Error creating listing");
+    req.flash("error", "Error creating listing: " + err.message);
     res.redirect("/listings/new");
   }
 });

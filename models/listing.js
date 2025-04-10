@@ -13,10 +13,7 @@ const listingSchema = new Schema({
     required: true,
   },
   image: {
-    url: {
-      type: String,
-      required: true,
-    },
+    url: String,
     filename: String,
   },
   price: {
@@ -26,7 +23,6 @@ const listingSchema = new Schema({
   },
   location: {
     type: String,
-    required: true,
   },
   country: {
     type: String,
@@ -34,6 +30,7 @@ const listingSchema = new Schema({
   },
   category: {
     type: String,
+    required: true,
     enum: [
       "Trending",
       "Mountains",
@@ -43,22 +40,16 @@ const listingSchema = new Schema({
       "City",
       "Hotel",
       "Cabin",
-      "Iconic Cities",
-      "Castles",
-      "Amazing Pools",
-      "Farms",
-      "Arctic",
     ],
-    required: true,
   },
   capacity: {
     type: Number,
-    default: 1,
+    required: true,
     min: 1,
   },
   rooms: {
     type: Number,
-    default: 1,
+    required: true,
     min: 1,
   },
   phone: {
@@ -68,7 +59,6 @@ const listingSchema = new Schema({
   },
   email: {
     type: String,
-    required: true,
     match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
   },
   reviews: [
@@ -92,6 +82,10 @@ const listingSchema = new Schema({
       type: [Number],
       required: true,
     },
+  },
+  tax: {
+    type: Number,
+    default: 0,
   },
 });
 
