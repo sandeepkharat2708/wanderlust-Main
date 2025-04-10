@@ -32,13 +32,13 @@ router.get("/new", isLoggedIn, (req, res) => {
 router.post("/", isLoggedIn, async (req, res) => {
   try {
     const newListing = new Listing(req.body.listing);
-    newListing.owner = req.user._id; // Set the owner
+    newListing.owner = req.user._id;
     await newListing.save();
-    req.flash("success", "Successfully created a new listing!");
+    req.flash("success", "Successfully created new listing!");
     res.redirect(`/listings/${newListing._id}`);
   } catch (err) {
     console.log(err);
-    req.flash("error", "Something went wrong!");
+    req.flash("error", "Error creating listing");
     res.redirect("/listings/new");
   }
 });

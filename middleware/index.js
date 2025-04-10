@@ -13,6 +13,7 @@ module.exports.isOwnerOrAdmin = async (req, res, next) => {
     req.flash("error", "You don't have permission to do that!");
     res.redirect(`/listings/${req.params.id}`);
   } catch (err) {
+    console.log(err);
     req.flash("error", "Something went wrong");
     res.redirect("/listings");
   }
