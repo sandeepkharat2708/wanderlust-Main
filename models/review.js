@@ -4,13 +4,18 @@ const Schema = mongoose.Schema;
 const reviewSchema = new Schema({
   comment: {
     type: String,
-    required: true,
+    required: [true, "Review comment is required"],
+    trim: true,
   },
   rating: {
     type: Number,
-    min: 1,
-    max: 5,
-    required: true,
+    required: [true, "Rating is required"],
+    min: [1, "Rating must be at least 1"],
+    max: [5, "Rating cannot exceed 5"],
+    validate: {
+      validator: Number.isInteger,
+      message: "Rating must be an integer",
+    },
   },
   createdAt: {
     type: Date,
@@ -19,7 +24,13 @@ const reviewSchema = new Schema({
   author: {
     type: Schema.Types.ObjectId,
     ref: "User",
+    required: true,
   },
 });
 
-module.exports = mongoose.model("Review", reviewSchema);
+// Add index for better query performance
+reviewSchema.index({ author: 1, createdAt: -1 });
+
+const Review = mongoose.model("Review", reviewSchema);
+
+module.exports = Review;
