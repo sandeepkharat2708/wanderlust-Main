@@ -4,45 +4,101 @@ const Review = require("./review.js");
 const { number } = require("joi");
 
 const listingSchema = new Schema({
-    title: {
-        type: String,
-        required: true,
+  title: {
+    type: String,
+    required: true,
+  },
+  description: {
+    type: String,
+    required: true,
+  },
+  image: {
+    url: {
+      type: String,
+      required: true,
     },
-    description: String,
-    image: {
-        url: String,
-        filename: String,
-    },
-    price: Number,
-    location: String,
-    country: String,
-    reviews: [
-        {
-            type: Schema.Types.ObjectId,
-            ref: "Review",
-        },
+    filename: String,
+  },
+  price: {
+    type: Number,
+    required: true,
+    min: 0,
+  },
+  location: {
+    type: String,
+    required: true,
+  },
+  country: {
+    type: String,
+    required: true,
+  },
+  category: {
+    type: String,
+    enum: [
+      "Trending",
+      "Mountains",
+      "Lake",
+      "Beach",
+      "Camping",
+      "City",
+      "Hotel",
+      "Cabin",
+      "Iconic Cities",
+      "Castles",
+      "Amazing Pools",
+      "Farms",
+      "Arctic",
     ],
-    owner: {
-        type: Schema.Types.ObjectId,
-        ref: "User",
+    required: true,
+  },
+  capacity: {
+    type: Number,
+    default: 1,
+    min: 1,
+  },
+  rooms: {
+    type: Number,
+    default: 1,
+    min: 1,
+  },
+  phone: {
+    type: String,
+    required: true,
+    match: /^[0-9]{10}$/,
+  },
+  email: {
+    type: String,
+    required: true,
+    match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+  },
+  reviews: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Review",
     },
-    geometry: {
-        type: {
-          type: String, // Don't do `{ location: { type: String } }`
-          enum: ['Point'], // 'location.type' must be 'Point'
-          required: true
-        },
-        coordinates: {
-          type: [Number],
-          required: true
-        }
-      }
+  ],
+  owner: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  geometry: {
+    type: {
+      type: String,
+      enum: ["Point"],
+      required: true,
+    },
+    coordinates: {
+      type: [Number],
+      required: true,
+    },
+  },
 });
 
 listingSchema.post("findOneAndDelete", async (listing) => {
-    if (listing) {
-        await Review.deleteMany({ _id: { $in: listing.reviews } });
-    }
+  if (listing) {
+    await Review.deleteMany({ _id: { $in: listing.reviews } });
+  }
 });
 
 const Listing = mongoose.model("Listing", listingSchema);

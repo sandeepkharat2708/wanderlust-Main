@@ -1,28 +1,42 @@
+require("dotenv").config();
 const express = require("express");
 const app = express();
+const mongoose = require("mongoose");
 const path = require("path");
-const methodOverride = require("method-override");
 const ejsMate = require("ejs-mate");
+const methodOverride = require("method-override");
 const session = require("express-session");
 const flash = require("connect-flash");
+const passport = require("passport");
+const LocalStrategy = require("passport-local");
+const User = require("./models/user");
 // Comment out Razorpay
 // const Razorpay = require("razorpay");
 const { sampleListings } = require("./data.js");
 
 // Import routes
 const listingRoutes = require("./routes/listing");
+const userRoutes = require("./routes/user");
 
-// Basic Express setup
-app.use(methodOverride("_method"));
-app.set("views", path.join(__dirname, "views"));
-app.set("view engine", "ejs");
-app.use(express.urlencoded({ extended: true }));
+// MongoDB connection
+mongoose
+  .connect(process.env.ATLASDB_URL)
+  .then(() => console.log("Connected to MongoDB!"))
+  .catch((err) => console.error("MongoDB Error:", err));
+
+// View engine setup
 app.engine("ejs", ejsMate);
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
+
+// Middleware
+app.use(express.urlencoded({ extended: true }));
+app.use(methodOverride("_method"));
 app.use(express.static(path.join(__dirname, "public")));
 
-// Session configuration
+// Session configuration - MUST come before passport
 const sessionConfig = {
-  secret: "your-secret-key",
+  secret: process.env.SECRET || "your-secret-key",
   resave: false,
   saveUninitialized: true,
   cookie: {
@@ -31,14 +45,20 @@ const sessionConfig = {
     maxAge: 1000 * 60 * 60 * 24 * 7,
   },
 };
-
-// Setup session and flash
 app.use(session(sessionConfig));
 app.use(flash());
 
-// Middleware to make flash messages available to all templates
+// Passport configuration
+app.use(passport.initialize());
+app.use(passport.session());
+passport.use(new LocalStrategy(User.authenticate()));
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
+
+// Flash and user middleware
 app.use((req, res, next) => {
-  res.locals.currUser = null; // Set default user state
+  console.log("Current user:", req.user); // Debug log
+  res.locals.currUser = req.user;
   res.locals.success = req.flash("success");
   res.locals.error = req.flash("error");
   next();
@@ -72,16 +92,33 @@ app.get("/", (req, res) => {
   res.redirect("/listings");
 });
 
+// Use user routes
+app.use("/", userRoutes);
+
 // Use listing routes
 app.use("/listings", listingRoutes);
 
-// Basic error handling
-app.all("*", (req, res) => {
-  res.status(404).send("Page Not Found!");
+// Error handler
+app.use((err, req, res, next) => {
+  console.error("ERROR:", err);
+  req.flash("error", "Something went wrong!");
+  res.redirect("/listings");
 });
 
 // Start server
 const port = process.env.PORT || 8080;
 app.listen(port, () => {
-  console.log(`🚀 Server is running on http://localhost:${port}`);
+  console.log(`Server running on http://localhost:${port}`);
+});
+
+// Handle process termination
+process.on("SIGINT", async () => {
+  try {
+    await mongoose.connection.close();
+    console.log("MongoDB connection closed through app termination");
+    process.exit(0);
+  } catch (err) {
+    console.error("Error closing MongoDB connection:", err);
+    process.exit(1);
+  }
 });

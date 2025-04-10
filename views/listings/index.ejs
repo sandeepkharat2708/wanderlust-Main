@@ -81,16 +81,19 @@
 
     <!-- Listings Grid -->
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4">
-      <% listings.forEach(function(listing, index) { %>
+      <% if (listings && listings.length) { %> <% listings.forEach(listing => {
+      %>
       <div class="col">
         <div class="card listing-card h-100">
           <!-- Image and Category -->
           <div class="position-relative">
+            <% if (listing.image && listing.image.url) { %>
             <img
               src="<%= listing.image.url %>"
               class="card-img-top listing-image"
               alt="<%= listing.title %>"
             />
+            <% } %>
             <span class="category-badge"
               ><%= listing.category || 'Uncategorized' %></span
             >
@@ -136,16 +139,17 @@
 
           <!-- Book Now Button -->
           <div class="card-footer">
-            <a
-              href="/listings/<%= listing.id || listing._id %>"
-              class="btn btn-book w-100"
-            >
-              Book Now
+            <a href="/listings/<%= listing._id %>" class="btn btn-book w-100">
+              View Details
             </a>
           </div>
         </div>
       </div>
-      <% }); %>
+      <% }) %> <% } else { %>
+      <div class="col-12">
+        <p>No listings found</p>
+      </div>
+      <% } %>
     </div>
   </div>
 </div>

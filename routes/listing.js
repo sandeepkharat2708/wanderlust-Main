@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const wrapAsync = require("../utils/wrapAsync.js");
-const Listing = require("../models/listing.js");
+const Listing = require("../models/listing");
 const { isLoggedIn, isOwner, validateListing } = require("../middleware.js");
 const listingController = require("../controllers/listings.js");
 const multer = require("multer");
@@ -23,6 +23,77 @@ router.use((req, res, next) => {
   next();
 });
 
+// Show new listing form
+router.get("/new", isLoggedIn, (req, res) => {
+  res.render("listings/new");
+});
+
+// Create new listing
+router.post("/", isLoggedIn, async (req, res) => {
+  try {
+    // Debug logs
+    console.log("User:", req.user);
+    console.log("Form data:", req.body.listing);
+
+    // Create new listing object
+    const newListing = new Listing({
+      ...req.body.listing,
+      owner: req.user._id,
+      image: {
+        url: req.body.listing.image.url,
+        filename: req.body.listing.image.url.split("/").pop(), // Extract filename from URL
+      },
+    });
+
+    // Validate listing
+    const validationError = newListing.validateSync();
+    if (validationError) {
+      console.error("Validation Error:", validationError);
+      req.flash("error", "Please fill all required fields correctly");
+      return res.redirect("/listings/new");
+    }
+
+    // Save listing
+    await newListing.save();
+    console.log("New listing created:", newListing);
+
+    req.flash("success", "Successfully created new listing!");
+    res.redirect(`/listings/${newListing._id}`);
+  } catch (err) {
+    console.error("Error creating listing:", err);
+    req.flash("error", err.message || "Error creating listing");
+    res.redirect("/listings/new");
+  }
+});
+
+// Show all listings
+router.get("/", async (req, res) => {
+  try {
+    const listings = await Listing.find({});
+    res.render("listings/index", { listings });
+  } catch (err) {
+    console.error(err);
+    req.flash("error", "Cannot find listings!");
+    res.redirect("/");
+  }
+});
+
+// Show single listing
+router.get("/:id", async (req, res) => {
+  try {
+    const listing = await Listing.findById(req.params.id).populate("owner");
+    if (!listing) {
+      req.flash("error", "Listing not found!");
+      return res.redirect("/listings");
+    }
+    res.render("listings/show", { listing });
+  } catch (err) {
+    console.error(err);
+    req.flash("error", "Cannot find this listing!");
+    res.redirect("/listings");
+  }
+});
+
 // index route
 // create new listing route
 router
@@ -34,9 +105,6 @@ router
     validateListing,
     wrapAsync(listingController.createListing)
   );
-
-// new route
-router.get("/new", isLoggedIn, listingController.renderNewForm);
 
 // show listing route
 // update listing route
@@ -61,48 +129,6 @@ router.get(
   wrapAsync(listingController.renderEditForm)
 );
 
-// Index route
-router.get("/", (req, res) => {
-  try {
-    if (!Array.isArray(sampleListings)) {
-      throw new Error("sampleListings is not an array");
-    }
-    console.log("Rendering listings with", sampleListings.length, "listings");
-    res.render("listings/index", {
-      listings: sampleListings,
-      totalListings: sampleListings.length,
-    });
-  } catch (error) {
-    console.error("Error in listings route:", error);
-    res.status(500).send("Something went wrong!");
-  }
-});
-
-// Show listing route
-router.get("/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    console.log("Looking for listing with ID:", id);
-    const listing = sampleListings.find(
-      (l) =>
-        l.id.toString() === id.toString() || l._id?.toString() === id.toString()
-    );
-
-    if (!listing) {
-      console.log("No listing found for ID:", id);
-      req.flash("error", "Listing not found");
-      return res.redirect("/listings");
-    }
-
-    console.log("Found listing:", listing.title);
-    res.render("listings/show", { listing });
-  } catch (err) {
-    console.error("Error in show route:", err);
-    req.flash("error", "Error loading listing");
-    res.redirect("/listings");
-  }
-});
-
 // Booking route
 router.post("/:id", (req, res) => {
   try {
@@ -116,6 +142,15 @@ router.post("/:id", (req, res) => {
     req.flash("error", "Failed to process booking");
     res.redirect(`/listings/${id}`);
   }
+});
+
+// Add this route for debugging
+router.get("/debug-session", (req, res) => {
+  res.json({
+    user: req.user,
+    isAuthenticated: req.isAuthenticated(),
+    session: req.session,
+  });
 });
 
 module.exports = router;

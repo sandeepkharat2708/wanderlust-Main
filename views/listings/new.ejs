@@ -1,94 +1,279 @@
-<%- layout("/layouts/boilerplate.ejs") -%>
+<% layout("layouts/boilerplate") %>
+
 <div class="row mt-3">
-    <div class="col-8 offset-2">
-        <h2>Add New Listing</h2>
+  <div class="col-8 offset-2">
+    <% if(error && error.length) { %>
+    <div class="alert alert-danger" role="alert"><%= error %></div>
+    <% } %>
+
+    <div class="card shadow">
+      <div class="card-body">
+        <h3 class="card-title text-center mb-4">Create New Listing</h3>
         <form
-            action="/listings"
-            method="POST"
-            class="needs-validation"
-            enctype="multipart/form-data"
+          method="POST"
+          action="/listings"
+          class="needs-validation"
+          novalidate
         >
+          <!-- Basic Information -->
+          <div class="mb-4">
+            <h5 class="text-muted mb-3">Basic Information</h5>
             <div class="mb-3">
-                <label for="listing[title]" class="form-label">Title</label>
-                <input
-                    type="text"
-                    name="listing[title]"
-                    placeholder="Add a catchy title"
-                    class="form-control"
-                    required
-                />
-                <div class="invalid-feedback">Please enter a title</div>
+              <label for="title" class="form-label">Title *</label>
+              <input
+                type="text"
+                name="listing[title]"
+                id="title"
+                class="form-control"
+                required
+              />
+              <div class="invalid-feedback">Please provide a title.</div>
             </div>
 
             <div class="mb-3">
-                <label for="listing[description]" class="form-label"
-                    >Description</label
-                >
-                <textarea
-                    name="listing[description]"
-                    placeholder="Add some description here..."
-                    class="form-control"
-                    required
-                ></textarea>
-                <div class="invalid-feedback">
-                    Please give a brief description
-                </div>
+              <label for="description" class="form-label">Description *</label>
+              <textarea
+                name="listing[description]"
+                id="description"
+                class="form-control"
+                required
+              ></textarea>
+              <div class="invalid-feedback">Please provide a description.</div>
+            </div>
+          </div>
+
+          <!-- Images and Category -->
+          <div class="mb-4">
+            <h5 class="text-muted mb-3">Images & Category</h5>
+            <div class="mb-3">
+              <label for="image" class="form-label">Image URL *</label>
+              <input
+                type="text"
+                name="listing[image][url]"
+                id="image"
+                class="form-control"
+                required
+              />
+              <div class="invalid-feedback">Please provide an image URL.</div>
             </div>
 
             <div class="mb-3">
-                <label for="listing[image]" class="form-label">Upload Image</label>
-                <input
-                    type="file"
-                    name="listing[image]"
-                    class="form-control"
-                    required
-                />
+              <label for="category" class="form-label">Category *</label>
+              <select
+                name="listing[category]"
+                id="category"
+                class="form-select"
+                required
+              >
+                <option value="">Select a category...</option>
+                <option value="Trending">Trending</option>
+                <option value="Mountains">Mountains</option>
+                <option value="Iconic Cities">Iconic Cities</option>
+                <option value="Castles">Castles</option>
+                <option value="Amazing Pools">Amazing Pools</option>
+                <option value="Camping">Camping</option>
+                <option value="Farms">Farms</option>
+                <option value="Arctic">Arctic</option>
+              </select>
+              <div class="invalid-feedback">Please select a category.</div>
             </div>
+          </div>
 
+          <!-- Location Details -->
+          <div class="mb-4">
+            <h5 class="text-muted mb-3">Location Details</h5>
             <div class="row">
-                <div class="mb-3 col-md-4">
-                    <label for="listing[price]" class="form-label">Price</label>
-                    <input
-                        type="number"
-                        name="listing[price]"
-                        placeholder="1000"
-                        class="form-control"
-                        required
-                    />
-                    <div class="invalid-feedback">Please enter a price</div>
-                </div>
-
-                <div class="mb-3 col-md-8">
-                    <label for="listing[country]" class="form-label"
-                        >Country</label
-                    >
-                    <input
-                        type="text"
-                        name="listing[country]"
-                        placeholder="India"
-                        class="form-control"
-                        required
-                    />
-                    <div class="invalid-feedback">Please enter a country</div>
-                </div>
-            </div>
-
-            <div class="mb-3">
-                <label for="listing[location]" class="form-label"
-                    >Location</label
-                >
-                <input
-                    type="text"
-                    name="listing[location]"
-                    placeholder="Maharashtra, Pune"
+              <div class="col-md-4 mb-3">
+                <label for="price" class="form-label">Price per night *</label>
+                <div class="input-group">
+                  <span class="input-group-text">₹</span>
+                  <input
+                    type="number"
+                    name="listing[price]"
+                    id="price"
                     class="form-control"
                     required
-                />
-                <div class="invalid-feedback">Please enter a location</div>
-            </div>
+                    min="0"
+                  />
+                  <div class="invalid-feedback">
+                    Please provide a valid price.
+                  </div>
+                </div>
+              </div>
 
-            <button class="btn add-btn mt-3">Add</button>
-            <br /><br />
+              <div class="col-md-4 mb-3">
+                <label for="location" class="form-label">Location *</label>
+                <input
+                  type="text"
+                  name="listing[location]"
+                  id="location"
+                  class="form-control"
+                  required
+                />
+                <div class="invalid-feedback">Please provide a location.</div>
+              </div>
+
+              <div class="col-md-4 mb-3">
+                <label for="country" class="form-label">Country *</label>
+                <input
+                  type="text"
+                  name="listing[country]"
+                  id="country"
+                  class="form-control"
+                  value="India"
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Property Details -->
+          <div class="mb-4">
+            <h5 class="text-muted mb-3">Property Details</h5>
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label for="capacity" class="form-label">Max Guests</label>
+                <input
+                  type="number"
+                  name="listing[capacity]"
+                  id="capacity"
+                  class="form-control"
+                  placeholder="Number of guests"
+                  required
+                  min="1"
+                />
+              </div>
+
+              <div class="col-md-4 mb-3">
+                <label for="rooms" class="form-label">Number of Rooms</label>
+                <input
+                  type="number"
+                  name="listing[rooms]"
+                  id="rooms"
+                  class="form-control"
+                  placeholder="Number of rooms"
+                  required
+                  min="1"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Contact Information -->
+          <div class="mb-4">
+            <h5 class="text-muted mb-3">Contact Information</h5>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="phone" class="form-label">Phone Number *</label>
+                <input
+                  type="tel"
+                  name="listing[phone]"
+                  id="phone"
+                  class="form-control"
+                  required
+                  pattern="[0-9]{10}"
+                />
+                <div class="form-text">10-digit mobile number</div>
+                <div class="invalid-feedback">
+                  Please provide a valid 10-digit phone number.
+                </div>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="email" class="form-label">Email *</label>
+                <input
+                  type="email"
+                  name="listing[email]"
+                  id="email"
+                  class="form-control"
+                  required
+                />
+                <div class="invalid-feedback">
+                  Please provide a valid email address.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-dark w-100">
+              Create Listing
+            </button>
+          </div>
         </form>
+      </div>
     </div>
+  </div>
 </div>
+
+<script>
+  (() => {
+    "use strict";
+    const forms = document.querySelectorAll(".needs-validation");
+    Array.from(forms).forEach((form) => {
+      form.addEventListener(
+        "submit",
+        (event) => {
+          if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+          form.classList.add("was-validated");
+        },
+        false
+      );
+    });
+  })();
+</script>
+
+<style>
+  .card {
+    border: none;
+    border-radius: 15px;
+    margin-bottom: 2rem;
+  }
+
+  .card-body {
+    padding: 2rem;
+  }
+
+  .form-label {
+    font-weight: 500;
+    color: #4a5568;
+  }
+
+  .form-control,
+  .form-select {
+    border-radius: 8px;
+    padding: 0.75rem;
+    border: 1px solid #e2e8f0;
+  }
+
+  .form-control:focus,
+  .form-select:focus {
+    border-color: #2d3748;
+    box-shadow: 0 0 0 0.2rem rgba(45, 55, 72, 0.25);
+  }
+
+  .btn-dark {
+    padding: 0.75rem 2rem;
+    font-weight: 500;
+    border-radius: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .text-muted {
+    color: #4a5568 !important;
+  }
+
+  .shadow {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+      0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+  }
+
+  .input-group-text {
+    background-color: #f8f9fa;
+    border: 1px solid #e2e8f0;
+  }
+</style>
