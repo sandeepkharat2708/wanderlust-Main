@@ -1,4 +1,7 @@
 const Listing = require("../models/listing");
+const mbxGeocoding = require("@mapbox/mapbox-sdk/services/geocoding");
+const mapToken = process.env.MAP_TOKEN;
+const geocodingClient = mbxGeocoding({ accessToken: mapToken });
 
 // Comment out Mapbox for now
 // const mbxGeocoding = require('@mapbox/mapbox-sdk/services/geocoding');
@@ -38,26 +41,42 @@ module.exports.showListing = async (req, res) => {
 };
 
 module.exports.createListing = async (req, res, next) => {
-  // Comment out Mapbox for now
-  // let response = await geocodingClient.forwardGeocode({
-  //     query: req.body.listing.location,
-  //     limit: 1,
-  //   })
-  //     .send();
+  try {
+    // Get coordinates from location
+    let response = await geocodingClient
+      .forwardGeocode({
+        query: `${req.body.listing.location}, ${req.body.listing.country}`,
+        limit: 1,
+      })
+      .send();
 
-  let url = req.file.path;
-  let filename = req.file.filename;
+    let url = req.file.path;
+    let filename = req.file.filename;
 
-  const newListing = new Listing(req.body.listing);
-  newListing.owner = req.user._id;
-  newListing.image = { url, filename };
+    const newListing = new Listing(req.body.listing);
+    newListing.owner = req.user._id;
+    newListing.image = { url, filename };
 
-  // Comment out Mapbox for now
-  // newListing.geometry = response.body.features[0].geometry;
-  let savedListing = await newListing.save();
-  console.log(savedListing);
-  req.flash("success", "New Listing Created!!!");
-  res.redirect("/listings");
+    // Set geometry from geocoding response
+    if (response.body.features && response.body.features.length > 0) {
+      newListing.geometry = response.body.features[0].geometry;
+    } else {
+      // Default to India coordinates if no location found
+      newListing.geometry = {
+        type: "Point",
+        coordinates: [77.209, 28.6139], // Delhi coordinates
+      };
+    }
+
+    let savedListing = await newListing.save();
+    console.log("Created listing with coordinates:", savedListing.geometry);
+    req.flash("success", "New Listing Created!!!");
+    res.redirect("/listings");
+  } catch (err) {
+    console.error("Error creating listing:", err);
+    req.flash("error", "Error creating listing");
+    res.redirect("/listings/new");
+  }
 };
 
 module.exports.renderEditForm = async (req, res) => {
@@ -74,17 +93,59 @@ module.exports.renderEditForm = async (req, res) => {
 };
 
 module.exports.updateListing = async (req, res) => {
-  let { id } = req.params;
-  let listing = await Listing.findByIdAndUpdate(id, { ...req.body.listing });
+  try {
+    let { id } = req.params;
+    let listing = await Listing.findById(id);
 
-  if (typeof req.file !== "undefined") {
-    let url = req.file.path;
-    let filename = req.file.filename;
-    listing.image = { url, filename };
-    await listing.save();
+    if (!listing) {
+      req.flash("error", "Listing not found!");
+      return res.redirect("/listings");
+    }
+
+    // Update geometry if location is provided
+    if (req.body.listing.location) {
+      let response = await geocodingClient
+        .forwardGeocode({
+          query: `${req.body.listing.location}, ${req.body.listing.country}`,
+          limit: 1,
+        })
+        .send();
+
+      if (response.body.features && response.body.features.length > 0) {
+        req.body.listing.geometry = response.body.features[0].geometry;
+      } else {
+        // Keep existing coordinates if no new location found
+        req.body.listing.geometry = listing.geometry;
+      }
+    }
+
+    // Update image if new file is uploaded
+    if (typeof req.file !== "undefined") {
+      let url = req.file.path;
+      let filename = req.file.filename;
+      req.body.listing.image = { url, filename };
+    }
+
+    // Update the listing
+    listing = await Listing.findByIdAndUpdate(
+      id,
+      { ...req.body.listing },
+      { new: true, runValidators: true }
+    );
+
+    if (!listing) {
+      req.flash("error", "Failed to update listing!");
+      return res.redirect("/listings");
+    }
+
+    console.log("Updated listing with coordinates:", listing.geometry);
+    req.flash("success", "Listing Updated!!!");
+    res.redirect(`/listings/${id}`);
+  } catch (err) {
+    console.error("Error updating listing:", err);
+    req.flash("error", "Error updating listing");
+    res.redirect("/listings");
   }
-  req.flash("success", "Listing Updated!!!");
-  res.redirect(`/listings/${id}`);
 };
 
 module.exports.destroyListing = async (req, res) => {
