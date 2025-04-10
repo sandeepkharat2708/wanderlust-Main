@@ -80,13 +80,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// Add this immediately after the import to verify the data
-console.log("INITIAL DATA CHECK:");
-console.log("Type of sampleListings:", typeof sampleListings);
-console.log("Is Array?", Array.isArray(sampleListings));
-console.log("Length:", sampleListings?.length);
-console.log("First item:", sampleListings?.[0]?.title);
-
 // Routes
 app.get("/", (req, res) => {
   res.redirect("/listings");
@@ -122,3 +115,6 @@ process.on("SIGINT", async () => {
     process.exit(1);
   }
 });
+
+// Add this to your app configuration
+app.locals.mapToken = process.env.MAP_TOKEN;

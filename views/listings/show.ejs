@@ -1,8 +1,3 @@
-<% layout("layouts/boilerplate") %>
-
-<script>
-  const mapToken = "<%= process.env.MAP_TOKEN || '' %>";
-  const coordinates = [0, 0]; // Default coordinates
 </script>
 
 <div class="container mt-4">
@@ -64,60 +59,12 @@
       </div>
     </div>
 
-    <!-- Right Column - Booking Card -->
+    <!-- Right Column - Map Card -->
     <div class="col-lg-4">
-      <div class="card booking-card">
-        <div class="card-body">
-          <!-- Price -->
-          <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-              <span class="price">₹<%= listing.price %></span>
-              <span class="text-muted">/night</span>
-            </div>
-          </div>
-
-          <!-- Booking Form -->
-          <form class="booking-form">
-            <div class="mb-3">
-              <label class="form-label">Check-in</label>
-              <input type="date" class="form-control" required />
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Check-out</label>
-              <input type="date" class="form-control" required />
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Guests</label>
-              <select class="form-select">
-                <% for(let i = 1; i <= (listing.capacity?.total || 2); i++) { %>
-                <option value="<%= i %>">
-                  <%= i %> guest<%= i > 1 ? 's' : '' %>
-                </option>
-                <% } %>
-              </select>
-            </div>
-            <button type="submit" class="btn btn-success w-100 mb-3">
-              Reserve Now
-            </button>
-          </form>
-
-          <!-- Price Details -->
-          <div class="price-details border-top pt-3">
-            <div class="d-flex justify-content-between mb-2">
-              <span>₹<%= listing.price %> × 1 night</span>
-              <span>₹<%= listing.price %></span>
-            </div>
-            <div class="d-flex justify-content-between mb-2">
-              <span>Service fee</span>
-              <span>₹<%= Math.round(listing.price * 0.1) %></span>
-            </div>
-            <div
-              class="d-flex justify-content-between fw-bold border-top pt-2 mt-2"
-            >
-              <span>Total</span>
-              <span>₹<%= Math.round(listing.price * 1.1) %></span>
-            </div>
-          </div>
+      <div class="card map-card">
+        <div class="card-body p-0">
+          <!-- Map Container -->
+          <div id="map"></div>
         </div>
       </div>
     </div>
@@ -145,12 +92,13 @@
     margin-bottom: 20px;
   }
 
-  .booking-card {
+  .map-card {
     border: none;
     border-radius: 15px;
     box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
     position: sticky;
     top: 20px;
+    overflow: hidden;
   }
 
   .price {
@@ -190,100 +138,76 @@
       height: 300px;
     }
 
-    .booking-card {
+    .map-card {
       position: static;
       margin-top: 20px;
     }
+
+    #map {
+      height: 300px;
+    }
+  }
+
+  .mapboxgl-popup-content {
+    padding: 15px;
+    border-radius: 10px;
+  }
+
+  .mapboxgl-popup-content h6 {
+    margin: 0 0 5px 0;
+    color: #2d3436;
+  }
+
+  .mapboxgl-popup-content p {
+    margin: 0;
+    color: #636e72;
+  }
+
+  #map {
+    width: 100%;
+    height: 500px;
+    border-radius: 15px;
   }
 </style>
 
-<script src="https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.js"></script>
-<link
-  href="https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.css"
-  rel="stylesheet"
-/>
 <script>
-  mapboxgl.accessToken = "<%= process.env.MAP_TOKEN %>";
+  // Check if listing has geometry coordinates, otherwise use default
+  const defaultCoordinates = [77.2090, 28.6139]; // Default to Delhi coordinates
+  const listingCoordinates = '<%= listing.geometry?.coordinates %>' || null;
+  const coordinates = listingCoordinates ? listingCoordinates.split(',').map(Number) : defaultCoordinates;
+
+  console.log('Coordinates being used:', coordinates); // Debug log
+
+  // Initialize the map
+  mapboxgl.accessToken = '<%= process.env.MAP_TOKEN %>';
   const map = new mapboxgl.Map({
-    container: "map",
-    style: "mapbox://styles/mapbox/streets-v11",
+    container: 'map',
+    style: 'mapbox://styles/mapbox/streets-v11',
     center: coordinates,
-    zoom: 12,
+    zoom: 9
   });
 
-  new mapboxgl.Marker()
+  // Add marker
+  const marker = new mapboxgl.Marker({color: '#ff0000'})
     .setLngLat(coordinates)
-    .setPopup(
-      new mapboxgl.Popup({ offset: 25 }).setHTML(
-        `<h6><%= listing.title %></h6><p><%= listing.location %></p>`
-      )
-    )
     .addTo(map);
+
+  // Add navigation controls
+  map.addControl(new mapboxgl.NavigationControl());
+
+  // Add popup
+  new mapboxgl.Popup({offset: 25})
+    .setLngLat(coordinates)
+    .setHTML(`
+      <h6><%= listing.title %></h6>
+      <p><%= listing.location %>, <%= listing.country %></p>
+    `)
+    .addTo(map);
+
+  // Ensure the map resizes properly
+  map.on('load', function() {
+    map.resize();
+  });
 </script>
 
-<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-
-<script>
-  document
-    .getElementById("payButton")
-    .addEventListener("click", async function () {
-      try {
-        // Get payment details from server
-        const response = await fetch(`/listings/<%= listing.id %>/pay`, {
-          method: "POST",
-        });
-        const data = await response.json();
-
-        // Configure Razorpay options
-        const options = {
-          key: data.keyId,
-          amount: data.amount,
-          currency: data.currency,
-          name: "WanderLust",
-          description: `Booking for ${data.listingTitle}`,
-          order_id: data.orderId,
-          handler: async function (response) {
-            try {
-              // Verify payment
-              const verifyResponse = await fetch("/verify-payment", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  razorpay_order_id: response.razorpay_order_id,
-                  razorpay_payment_id: response.razorpay_payment_id,
-                  razorpay_signature: response.razorpay_signature,
-                }),
-              });
-
-              const verifyData = await verifyResponse.json();
-
-              if (verifyData.success) {
-                alert("Payment successful! Booking confirmed.");
-                window.location.href = "/listings";
-              } else {
-                alert("Payment verification failed. Please try again.");
-              }
-            } catch (error) {
-              alert("Payment verification failed. Please try again.");
-            }
-          },
-          prefill: {
-            name: "",
-            email: "",
-            contact: "",
-          },
-          theme: {
-            color: "#2ecc71",
-          },
-        };
-
-        // Initialize Razorpay
-        const rzp = new Razorpay(options);
-        rzp.open();
-      } catch (error) {
-        alert("Failed to initialize payment. Please try again.");
-      }
-    });
-</script>
+<% layout("layouts/boilerplate") %>
