@@ -1,242 +1,555 @@
-<%- layout("/layouts/boilerplate.ejs") -%>
-<body>
-  <style>
-    #filters {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
+<% layout("layouts/boilerplate") %>
+
+<div class="container-fluid listing-container">
+  <!-- Search and Filter Section -->
+  <div class="search-section py-3 bg-white sticky-top">
+    <div class="container">
+      <!-- Search Row with Tax Toggle -->
+      <div class="row align-items-center mb-3">
+        <div class="col-12 col-md-6">
+          <div class="search-box">
+            <i class="fas fa-search search-icon"></i>
+            <input
+              type="text"
+              class="form-control search-input"
+              placeholder="Search destinations..."
+            />
+          </div>
+        </div>
+        <div class="col-12 col-md-6 mt-2 mt-md-0">
+          <div
+            class="tax-toggle-container d-flex justify-content-md-end align-items-center"
+          >
+            <label class="toggle-label me-2 text-muted"
+              >Display total after taxes</label
+            >
+            <div class="form-check form-switch">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                id="taxToggle"
+                role="switch"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters Row -->
+      <div class="row">
+        <div class="col-12">
+          <div class="filters-container">
+            <div class="filters d-flex flex-wrap gap-2">
+              <button class="btn btn-filter active">
+                <i class="fas fa-fire"></i> Trending
+              </button>
+              <button class="btn btn-filter">
+                <i class="fas fa-mountain"></i> Mountains
+              </button>
+              <button class="btn btn-filter">
+                <i class="fas fa-umbrella-beach"></i> Beaches
+              </button>
+              <button class="btn btn-filter">
+                <i class="fas fa-swimming-pool"></i> Pools
+              </button>
+              <button class="btn btn-filter">
+                <i class="fas fa-campground"></i> Camping
+              </button>
+              <button class="btn btn-filter">
+                <i class="fas fa-city"></i> Cities
+              </button>
+              <button class="btn btn-filter">
+                <i class="fas fa-hotel"></i> Hotels
+              </button>
+              <button class="btn btn-filter">
+                <i class="fas fa-house"></i> Cabins
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="container py-4">
+    <!-- Section Title -->
+    <div class="section-title mb-4">
+      <h4>Featured Places to Stay</h4>
+      <p class="text-muted">Pick from our selection of best accommodations</p>
+    </div>
+
+    <!-- Listings Grid -->
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4">
+      <% listings.forEach(function(listing) { %>
+      <div class="col">
+        <div class="card listing-card h-100">
+          <!-- Image and Category -->
+          <div class="position-relative">
+            <img
+              src="<%= listing.image?.url || 'https://images.unsplash.com/photo-1566073771259-6a8506099945' %>"
+              class="card-img-top listing-image"
+              alt="<%= listing.title %>"
+            />
+            <span class="category-badge"> <%= listing.category %> </span>
+            <button class="btn btn-like position-absolute">
+              <i class="far fa-heart"></i>
+            </button>
+          </div>
+
+          <div class="card-body">
+            <!-- Title and Location -->
+            <div class="listing-info mb-3">
+              <h5 class="card-title mb-1"><%= listing.title %></h5>
+              <p class="location mb-2">
+                <i class="fas fa-map-marker-alt"></i>
+                <%= listing.location %>, <%= listing.country %>
+              </p>
+              <div class="price">
+                <span class="amount">₹<%= listing.price %></span>
+                <span class="period">/ night</span>
+              </div>
+            </div>
+
+            <!-- Amenities -->
+            <div class="amenities">
+              <div class="d-flex justify-content-between mb-2">
+                <span class="amenity">
+                  <i class="fas fa-bed"></i>
+                  <%= listing.rooms?.bedrooms || 1 %> Bedrooms
+                </span>
+                <span class="amenity">
+                  <i class="fas fa-bath"></i>
+                  <%= listing.rooms?.bathrooms || 1 %> Baths
+                </span>
+              </div>
+              <div class="capacity">
+                <i class="fas fa-users"></i>
+                Up to <%= listing.capacity?.total || 2 %> guests
+              </div>
+            </div>
+          </div>
+
+          <!-- Book Now Button -->
+          <div class="card-footer">
+            <a href="/listings/<%= listing.id %>" class="btn btn-book w-100">
+              Book Now
+            </a>
+          </div>
+        </div>
+      </div>
+      <% }); %>
+    </div>
+  </div>
+</div>
+
+<!-- Filter Modal -->
+<div class="modal fade" id="filterModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Filter Properties</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <!-- Price Range -->
+        <div class="mb-4">
+          <label class="form-label">Price Range</label>
+          <div class="d-flex gap-2">
+            <input type="number" class="form-control" placeholder="Min" />
+            <input type="number" class="form-control" placeholder="Max" />
+          </div>
+        </div>
+
+        <!-- Property Type -->
+        <div class="mb-4">
+          <label class="form-label">Property Type</label>
+          <select class="form-select">
+            <option>All Types</option>
+            <option>Villa</option>
+            <option>Apartment</option>
+            <option>House</option>
+          </select>
+        </div>
+
+        <!-- Rooms -->
+        <div class="mb-4">
+          <label class="form-label">Minimum Bedrooms</label>
+          <select class="form-select">
+            <option>Any</option>
+            <option>1</option>
+            <option>2</option>
+            <option>3+</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Close
+        </button>
+        <button type="button" class="btn btn-success">Apply Filters</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Container Styles */
+  .listing-container {
+    background-color: #f8f9fa;
+  }
+
+  /* Search Section */
+  .search-section {
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    border-bottom: 1px solid #eee;
+  }
+
+  .search-box {
+    position: relative;
+  }
+
+  .search-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #666;
+  }
+
+  .search-input {
+    padding-left: 40px;
+    border-radius: 25px;
+    border: 1px solid #ddd;
+    height: 45px;
+  }
+
+  .search-input:focus {
+    box-shadow: 0 0 0 2px rgba(46, 204, 113, 0.25);
+    border-color: #2ecc71;
+  }
+
+  /* Tax Toggle Styles */
+  .tax-toggle-container {
+    gap: 10px;
+  }
+
+  .toggle-label {
+    font-size: 0.9rem;
+    margin-bottom: 0;
+  }
+
+  .form-check-input {
+    width: 3rem;
+    height: 1.5rem;
+    cursor: pointer;
+    background-color: #e9ecef;
+    border-color: #e9ecef;
+  }
+
+  .form-check-input:checked {
+    background-color: #2ecc71;
+    border-color: #2ecc71;
+  }
+
+  .form-check-input:focus {
+    border-color: #2ecc71;
+    box-shadow: 0 0 0 0.2rem rgba(46, 204, 113, 0.25);
+  }
+
+  /* Category Select Styles */
+  .category-select {
+    height: 45px;
+    border-radius: 25px;
+    border: 1px solid #ddd;
+    padding: 0 20px;
+    background-color: white;
+    cursor: pointer;
+    max-width: 200px;
+    margin-left: auto;
+  }
+
+  .category-select:focus {
+    box-shadow: 0 0 0 2px rgba(46, 204, 113, 0.25);
+    border-color: #2ecc71;
+  }
+
+  .filters-container {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding: 5px 0;
+  }
+
+  .filters-container::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filters {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 10px;
+    padding-bottom: 5px;
+  }
+
+  .btn-filter {
+    white-space: nowrap;
+    padding: 8px 16px;
+    border-radius: 20px;
+    background: white;
+    border: 1px solid #dee2e6;
+    color: #444;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+    min-width: max-content;
+  }
+
+  .btn-filter i {
+    margin-right: 5px;
+  }
+
+  .btn-filter:hover,
+  .btn-filter.active {
+    background: #2ecc71;
+    color: white;
+    border-color: #2ecc71;
+    transform: translateY(-1px);
+  }
+
+  /* Listing Cards */
+  .listing-card {
+    border: none;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+  }
+
+  .listing-card:hover {
+    transform: translateY(-5px);
+  }
+
+  .listing-image {
+    height: 200px;
+    object-fit: cover;
+  }
+
+  .category-badge {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    background: rgba(46, 204, 113, 0.9);
+    color: white;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+  }
+
+  .btn-like {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: white;
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    transition: all 0.3s ease;
+  }
+
+  .btn-like:hover {
+    background: #ff4757;
+    color: white;
+  }
+
+  /* Card Content */
+  .listing-info .location {
+    font-size: 0.9rem;
+    color: #666;
+  }
+
+  .price .amount {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #2ecc71;
+  }
+
+  .price .period {
+    color: #666;
+    font-size: 0.9rem;
+  }
+
+  .amenities {
+    font-size: 0.9rem;
+    color: #666;
+  }
+
+  .amenity i,
+  .capacity i {
+    color: #2ecc71;
+    margin-right: 5px;
+  }
+
+  /* Footer */
+  .card-footer {
+    background: white;
+    border-top: 1px solid #eee;
+    padding: 15px;
+  }
+
+  .btn-book {
+    background: #2ecc71;
+    color: white;
+    border: none;
+    padding: 10px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+  }
+
+  .btn-book:hover {
+    background: #27ae60;
+    transform: translateY(-2px);
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .search-section {
+      padding: 10px 0;
     }
 
-    .filter {
-      text-align: center;
-      margin-right: 2rem;
-      margin-top: 1rem;
-      opacity: 0.7;
+    .search-input,
+    .category-select {
+      height: 40px;
     }
 
-    .filter:hover {
-      opacity: 1;
-      cursor: pointer;
+    .category-select {
+      max-width: 100%;
+      margin-top: 10px;
     }
 
-    .filter p {
+    .filters {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+    }
+
+    .btn-filter {
+      padding: 6px 12px;
       font-size: 0.8rem;
     }
 
-    .tax-info {
-      display: none;
+    .tax-toggle-container {
+      justify-content: flex-start !important;
+      margin-top: 10px;
     }
 
-    .tax-toggle {
-      border: 1px solid black;
-      border-radius: 1rem;
-      height: 3.5rem;
-      padding: 1rem;
-      margin-left: 5rem;
-      display: flex;
-      align-items: center;
+    .toggle-label {
+      font-size: 0.85rem;
     }
-  </style>
+  }
 
-  <div class="container mt-4 mb-4">
-    <div class="filter-section p-3 bg-light rounded shadow-sm">
-      <div class="row">
-        <div class="col-md-3">
-          <label class="form-label"
-            ><i class="fas fa-tags me-2"></i>Category</label
-          >
-          <select class="form-select">
-            <option>All Categories</option>
-            <option>Luxury Villa</option>
-            <option>Beach Resort</option>
-            <option>Mountain Retreat</option>
-          </select>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label"><i class="fas fa-bed me-2"></i>Rooms</label>
-          <select class="form-select">
-            <option>Any Size</option>
-            <option>1-2 Rooms</option>
-            <option>3-4 Rooms</option>
-            <option>5+ Rooms</option>
-          </select>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label"
-            ><i class="fas fa-users me-2"></i>Capacity</label
-          >
-          <select class="form-select">
-            <option>Any Size</option>
-            <option>1-2 People</option>
-            <option>3-6 People</option>
-            <option>7+ People</option>
-          </select>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label" style="visibility: hidden">Filter</label>
-          <button class="btn btn-success w-100">Apply Filters</button>
-        </div>
-      </div>
-    </div>
-  </div>
+  /* Dark mode support */
+  @media (prefers-color-scheme: dark) {
+    .search-section {
+      background-color: #2d2d2d !important;
+      border-bottom-color: #444;
+    }
 
-  <div id="filters">
-    <div class="filter">
-      <div><i class="fa-solid fa-fire"></i></div>
-      <p>Trending</p>
-    </div>
-    <div class="filter">
-      <div><i class="fa-solid fa-bed"></i></div>
-      <p>Rooms</p>
-    </div>
-    <div class="filter">
-      <div><i class="fa-solid fa-mountain-city"></i></div>
-      <p>Iconic Cities</p>
-    </div>
-    <div class="filter">
-      <div><i class="fa-solid fa-mountain"></i></div>
-      <p>Montains</p>
-    </div>
-    <div class="filter">
-      <div><i class="fa-solid fa-cow"></i></div>
-      <p>Farm</p>
-    </div>
-    <div class="filter">
-      <div><i class="fa-brands fa-fort-awesome"></i></div>
-      <p>castle</p>
-    </div>
-    <div class="filter">
-      <div><i class="fa-solid fa-person-swimming"></i></div>
-      <p>Amazing Pools</p>
-    </div>
-    <div class="filter">
-      <div><i class="fa-solid fa-campground"></i></div>
-      <p>Camping</p>
-    </div>
-    <!-- 
-        <div class="filter">
-            <div><i class="fa-solid fa-snowflake"></i></div>
-            <p>Arctic</p>
-        </div> -->
-    <div class="search">
-      <form action="/search" method="GET">
-        <input type="text" name="country" placeholder="Search by country" />
-        <button type="submit">Search</button>
-      </form>
-    </div>
+    .search-input,
+    .category-select {
+      background-color: #3d3d3d;
+      color: #fff;
+      border-color: #444;
+    }
 
-    <div class="tax-toggle">
-      <div class="form-check-reverse form-switch">
-        <input
-          class="form-check-input"
-          type="checkbox"
-          role="switch"
-          id="flexSwitchCheckDefault"
-        />
-        <label class="form-check-label" for="flexSwitchCheckDefault"
-          >Display total after Taxes</label
-        >
-      </div>
-    </div>
-  </div>
+    .search-input::placeholder {
+      color: #888;
+    }
 
-  <div class="container listings-grid">
-    <div class="row row-cols-lg-3 row-cols-md-2 row-cols-sm-1 gy-4">
-      <% for(let listing of listings) { %>
-      <div class="col">
-        <div class="card listing-card">
-          <div class="position-relative">
-            <img
-              src="<%= listing.image?.url || 'https://images.unsplash.com/photo-1568605114967-8130f3a36994' %>"
-              class="card-img-top"
-              alt="<%= listing.title %>"
-            />
-            <span class="category-badge position-absolute top-0 end-0 m-3">
-              <%= listing.category || 'Uncategorized' %>
-            </span>
-          </div>
-          <div class="card-body">
-            <h5 class="card-title"><%= listing.title %></h5>
+    .category-select {
+      background-color: #3d3d3d;
+      color: #fff;
+    }
 
-            <div class="mb-3">
-              <p class="price-text mb-1">
-                $<%= listing.price %>
-                <span class="text-muted" style="font-size: 0.875rem"
-                  >per night</span
-                >
-              </p>
-              <p class="location-text">
-                <i class="fas fa-map-marker-alt me-1"></i>
-                <%= listing.location %>, <%= listing.country %>
-              </p>
-            </div>
+    .category-select option {
+      background-color: #2d2d2d;
+    }
 
-            <div class="property-details p-3 bg-light rounded">
-              <div class="detail-item mb-2">
-                <i class="fas fa-door-open text-success me-2"></i>
-                <span class="fw-bold">Rooms:</span>
-                <%= listing.rooms?.bedrooms || 1 %> Bed, <%=
-                listing.rooms?.bathrooms || 1 %> Bath
-              </div>
+    .btn-filter {
+      background: #3d3d3d;
+      border-color: #444;
+      color: #fff;
+    }
 
-              <div class="detail-item mb-2">
-                <i class="fas fa-users text-success me-2"></i>
-                <span class="fw-bold">Capacity:</span>
-                <%= listing.capacity?.total || 2 %> total
-                <small class="text-muted">
-                  (<%= listing.capacity?.adults || 2 %> adults + <%=
-                  listing.capacity?.children || 0 %> children)
-                </small>
-              </div>
+    .btn-filter:not(:hover):not(.active) {
+      background: #3d3d3d;
+      color: #fff;
+    }
 
-              <div class="detail-item">
-                <i class="fas fa-user-circle text-success me-2"></i>
-                <span class="fw-bold">Host:</span>
-                <%= listing.contact?.host || 'Contact for details' %>
-              </div>
-            </div>
+    .toggle-label {
+      color: #aaa !important;
+    }
 
-            <button
-              class="btn btn-outline-success w-100 mt-3"
-              data-bs-toggle="collapse"
-              data-bs-target="#contact<%= listing.id %>"
-            >
-              <i class="fas fa-envelope me-2"></i>Contact Host
-            </button>
+    .form-check-input {
+      background-color: #444;
+      border-color: #444;
+    }
 
-            <div class="collapse mt-3" id="contact<%= listing.id %>">
-              <div class="contact-info">
-                <% if (listing.contact?.phone) { %>
-                <p class="mb-2">
-                  <i class="fas fa-phone text-success me-2"></i>
-                  <%= listing.contact.phone %>
-                </p>
-                <% } %> <% if (listing.contact?.email) { %>
-                <p class="mb-0">
-                  <i class="fas fa-envelope text-success me-2"></i>
-                  <%= listing.contact.email %>
-                </p>
-                <% } %>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <% } %>
-    </div>
-  </div>
-</body>
+    .form-check-input:not(:checked) {
+      background-color: #444;
+    }
+  }
+</style>
 
 <script>
-  let taxSwitch = document.getElementById("flexSwitchCheckDefault");
-  taxSwitch.addEventListener("click", () => {
-    let taxInfo = document.getElementsByClassName("tax-info");
-    for (info of taxInfo) {
-      if (info.style.display != "inline") {
-        info.style.display = "inline";
+  // Only handle the tax toggle functionality
+  document.getElementById("taxToggle").addEventListener("change", function (e) {
+    const showTaxes = e.target.checked;
+    const priceElements = document.querySelectorAll(".price .amount");
+
+    priceElements.forEach((el) => {
+      const basePrice = parseInt(
+        el.getAttribute("data-base-price") || el.textContent.replace("₹", "")
+      );
+      if (showTaxes) {
+        // Add 18% tax
+        const withTax = Math.round(basePrice * 1.18);
+        el.textContent = `₹${withTax}`;
       } else {
-        info.style.display = "none";
+        // Show base price
+        el.textContent = `₹${basePrice}`;
       }
-    }
+    });
+  });
+
+  // Handle filter buttons
+  document.querySelectorAll(".btn-filter").forEach((button) => {
+    button.addEventListener("click", function () {
+      // Remove active class from all buttons
+      document.querySelectorAll(".btn-filter").forEach((btn) => {
+        btn.classList.remove("active");
+      });
+      // Add active class to clicked button
+      this.classList.add("active");
+
+      // You can add filtering logic here
+      const filterType = this.textContent.trim();
+      console.log("Selected filter:", filterType);
+    });
+  });
+
+  // When rendering each listing card, add data-base-price attribute
+  document.querySelectorAll(".price .amount").forEach((el) => {
+    const basePrice = el.textContent.replace("₹", "");
+    el.setAttribute("data-base-price", basePrice);
   });
 </script>

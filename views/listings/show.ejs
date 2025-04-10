@@ -1,124 +1,230 @@
-<%- layout("/layouts/boilerplate.ejs") -%>
+<% layout("layouts/boilerplate") %>
 
 <script>
-    const mapToken = "<%= process.env.MAP_TOKEN %>";
-    const coordinates = <%- JSON.stringify(listing.geometry.coordinates) %>;
+  const mapToken = "<%= process.env.MAP_TOKEN || '' %>";
+  const coordinates = [0, 0]; // Default coordinates
 </script>
 
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-lg-10">
-            <h2 class="text-center text-primary fw-bold"><%= listing.title %></h2>
-            <div class="card listing-card shadow-lg border-0 rounded-4 overflow-hidden">
-                <img src="<%= listing.image.url %>" class="card-img-top show-img" alt="Listing Image" style="height: 400px; object-fit: cover;">
-                <div class="card-body text-center">
-                    <p class="card-text text-muted">Owned by <i class="fw-bold">@<%= listing.owner.username %></i></p>
-                    <p class="card-text lead"><%= listing.description %></p>
-                    <p class="fs-4 fw-bold text-success">&#8377;<%= listing.price.toLocaleString("en-IN") %> / Night</p>
-                    <p class="text-secondary"><i class="bi bi-geo-alt"></i> <%= listing.location %>, <%= listing.country %></p>
-                </div>
+<div class="container">
+  <div class="row mt-3">
+    <!-- Main Listing Info -->
+    <div class="col-lg-8 col-md-12">
+      <div class="card listing-card">
+        <img
+          src="<%= listing.image?.url || 'https://images.unsplash.com/photo-1566073771259-6a8506099945' %>"
+          class="card-img-top show-img"
+          alt="<%= listing.title %>"
+        />
+        <div class="card-body">
+          <h3 class="card-title"><%= listing.title %></h3>
+          <p class="text-muted">
+            <i class="fas fa-map-marker-alt me-2"></i>
+            <%= listing.location %>, <%= listing.country %>
+          </p>
+          <h5 class="card-text mb-3">₹<%= listing.price %> / night</h5>
+          <p class="card-text"><%= listing.description %></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Booking Card -->
+    <div class="col-lg-4 col-md-12">
+      <div class="card shadow booking-card">
+        <div class="card-body">
+          <h4 class="card-title text-center mb-4">Book This Place</h4>
+
+          <!-- Price Info -->
+          <div class="price-info mb-3">
+            <h5>
+              ₹<%= listing.price %> <small class="text-muted">/night</small>
+            </h5>
+          </div>
+
+          <!-- Quick Details -->
+          <div class="details-info mb-3">
+            <% if (listing.rooms) { %>
+            <p>
+              <i class="fas fa-bed me-2"></i><%= listing.rooms.bedrooms || 1 %>
+              Bedrooms
+            </p>
+            <% } %> <% if (listing.capacity) { %>
+            <p>
+              <i class="fas fa-users me-2"></i>Up to <%= listing.capacity.total
+              || 2 %> guests
+            </p>
+            <% } %>
+          </div>
+
+          <hr />
+
+          <!-- Price Calculation -->
+          <div class="price-calc mb-4">
+            <div class="d-flex justify-content-between mb-2">
+              <span>Base price</span>
+              <span>₹<%= listing.price %></span>
             </div>
-            <div class="mt-3 text-center">
-                <% if(currUser && listing.owner._id.equals(currUser._id)) { %>
-                    <a href="/listings/<%= listing._id %>/edit" class="btn btn-warning me-2 px-4">Edit</a>
-                    <form action="/listings/<%= listing._id %>?_method=DELETE" method="POST" class="d-inline">
-                        <button class="btn btn-danger px-4" onclick="return confirm('Are you sure?')">Delete</button>
-                    </form>
-                <% } %>
+            <div class="d-flex justify-content-between fw-bold">
+              <span>Total</span>
+              <span>₹<%= listing.price %></span>
             </div>
+          </div>
+
+          <!-- Pay Now Button -->
+          <button class="btn btn-success btn-lg w-100" id="payButton">
+            <i class="fas fa-credit-card me-2"></i>Pay Now
+          </button>
         </div>
+      </div>
     </div>
-    
-    <% if(currUser) { %>
-    <div class="row justify-content-center mt-5">
-        <div class="col-md-8">
-            <h4 class="text-center">Leave a Review</h4>
-            <form action="/listings/<%= listing._id %>/reviews" method="post" class="p-4 shadow rounded bg-light">
-                <div class="mb-3">
-                    <label for="rating" class="form-label">Rating</label>
-                    <select name="review[rating]" class="form-select">
-                        <option value="5">⭐⭐⭐⭐⭐ - Amazing</option>
-                        <option value="4">⭐⭐⭐⭐ - Very Good</option>
-                        <option value="3">⭐⭐⭐ - Average</option>
-                        <option value="2">⭐⭐ - Not Good</option>
-                        <option value="1">⭐ - Terrible</option>
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label for="comment" class="form-label">Comment</label>
-                    <textarea name="review[comment]" class="form-control" rows="4" required></textarea>
-                </div>
-                <div class="text-center">
-                    <button class="btn btn-outline-dark w-100">Submit Review</button>
-                </div>
-            </form>
-        </div>
-    </div>
-    <% } %>
-    
-    <% if(listing.reviews.length > 0) { %>
-    <div class="row justify-content-center mt-5">
-        <div class="col-lg-10">
-            <h4 class="text-center">All Reviews</h4>
-            <div class="row row-cols-1 row-cols-md-3 g-4">
-                <% for(review of listing.reviews) { %>
-                <div class="col">
-                    <div class="card shadow-lg border-0 h-100 p-3 rounded-4 hover-effect">
-                        <div class="card-body">
-                            <h5 class="fw-bold">@<%= review.author.username %></h5>
-                            <p class="text-warning">⭐ Rating: <%= review.rating %></p>
-                            <p><%= review.comment %></p>
-                        </div>
-                        <% if(currUser && review.author._id.equals(currUser._id)) { %>
-                            <div class="card-footer bg-transparent border-0 text-center">
-                                <form action="/listings/<%= listing._id %>/reviews/<%= review._id %>?_method=DELETE" method="post" class="d-inline">
-                                    <button class="btn btn-sm btn-danger" onclick="return confirm('Delete this review?')">Delete</button>
-                                </form>
-                            </div>
-                        <% } %>
-                    </div>
-                </div>
-                <% } %>
-            </div>
-        </div>
-    </div>
-    <% } %>
-    
-    <div class="row justify-content-center mt-5">
-        <div class="col-lg-8 text-center">
-            <h3 class="text-primary fw-bold border-bottom pb-2 mb-3">Where You'll Be</h3>
-            <div id="map" class="rounded border border-primary shadow-lg" style="height: 400px;"></div>
-        </div>
-    </div>
+  </div>
 </div>
 
 <style>
-    .hover-effect:hover {
-        transform: scale(1.05);
-        transition: 0.3s ease-in-out;
+  .show-img {
+    height: 400px;
+    object-fit: cover;
+    border-radius: 15px 15px 0 0;
+  }
+
+  .listing-card {
+    border: none;
+    border-radius: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .booking-card {
+    border: none;
+    border-radius: 15px;
+    position: sticky;
+    top: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .btn-success {
+    background-color: #2ecc71;
+    border: none;
+    padding: 15px;
+    font-size: 1.1rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+  }
+
+  .btn-success:hover {
+    background-color: #27ae60;
+    transform: translateY(-2px);
+  }
+
+  .details-info i {
+    color: #2ecc71;
+  }
+
+  .price-calc {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 10px;
+  }
+
+  .price-info h5 {
+    color: #2ecc71;
+    font-size: 1.5rem;
+  }
+
+  @media (max-width: 992px) {
+    .booking-card {
+      position: static;
+      margin-bottom: 20px;
     }
-    #map {
-        margin: auto;
-        width: 100%;
-    }
+  }
 </style>
 
 <script src="https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.js"></script>
-<link href="https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.css" rel="stylesheet" />
+<link
+  href="https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.css"
+  rel="stylesheet"
+/>
 <script>
-    mapboxgl.accessToken = "<%= process.env.MAP_TOKEN %>";
-    const map = new mapboxgl.Map({
-        container: "map",
-        style: "mapbox://styles/mapbox/streets-v11",
-        center: coordinates,
-        zoom: 12
-    });
+  mapboxgl.accessToken = "<%= process.env.MAP_TOKEN %>";
+  const map = new mapboxgl.Map({
+    container: "map",
+    style: "mapbox://styles/mapbox/streets-v11",
+    center: coordinates,
+    zoom: 12,
+  });
 
-    new mapboxgl.Marker()
-        .setLngLat(coordinates)
-        .setPopup(
-            new mapboxgl.Popup({ offset: 25 })
-                .setHTML(`<h6><%= listing.title %></h6><p><%= listing.location %></p>`)
-        )
-        .addTo(map);
+  new mapboxgl.Marker()
+    .setLngLat(coordinates)
+    .setPopup(
+      new mapboxgl.Popup({ offset: 25 }).setHTML(
+        `<h6><%= listing.title %></h6><p><%= listing.location %></p>`
+      )
+    )
+    .addTo(map);
+</script>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<script>
+  document
+    .getElementById("payButton")
+    .addEventListener("click", async function () {
+      try {
+        // Get payment details from server
+        const response = await fetch(`/listings/<%= listing.id %>/pay`, {
+          method: "POST",
+        });
+        const data = await response.json();
+
+        // Configure Razorpay options
+        const options = {
+          key: data.keyId,
+          amount: data.amount,
+          currency: data.currency,
+          name: "WanderLust",
+          description: `Booking for ${data.listingTitle}`,
+          order_id: data.orderId,
+          handler: async function (response) {
+            try {
+              // Verify payment
+              const verifyResponse = await fetch("/verify-payment", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+                }),
+              });
+
+              const verifyData = await verifyResponse.json();
+
+              if (verifyData.success) {
+                alert("Payment successful! Booking confirmed.");
+                window.location.href = "/listings";
+              } else {
+                alert("Payment verification failed. Please try again.");
+              }
+            } catch (error) {
+              alert("Payment verification failed. Please try again.");
+            }
+          },
+          prefill: {
+            name: "",
+            email: "",
+            contact: "",
+          },
+          theme: {
+            color: "#2ecc71",
+          },
+        };
+
+        // Initialize Razorpay
+        const rzp = new Razorpay(options);
+        rzp.open();
+      } catch (error) {
+        alert("Failed to initialize payment. Please try again.");
+      }
+    });
 </script>

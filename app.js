@@ -5,6 +5,9 @@ const methodOverride = require("method-override");
 const ejsMate = require("ejs-mate");
 const session = require("express-session");
 const flash = require("connect-flash");
+// Comment out Razorpay
+// const Razorpay = require("razorpay");
+const { sampleListings } = require("./data.js");
 
 // Basic Express setup
 app.use(methodOverride("_method"));
@@ -38,222 +41,86 @@ app.use((req, res, next) => {
   next();
 });
 
-// Default image for fallback
-const DEFAULT_IMAGE = {
-  url: "https://images.unsplash.com/photo-1566073771259-6a8506099945",
-  filename: "default_property",
-};
-
-const SAMPLE_IMAGES = [
-  {
-    url: "https://images.unsplash.com/photo-1568605114967-8130f3a36994",
-    filename: "modern_house",
-  },
-  {
-    url: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6",
-    filename: "luxury_villa",
-  },
-  {
-    url: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750",
-    filename: "beach_house",
-  },
-  {
-    url: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9",
-    filename: "cozy_home",
-  },
-  {
-    url: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c",
-    filename: "modern_interior",
-  },
-  {
-    url: "https://images.unsplash.com/photo-1613490493576-7fde63acd811",
-    filename: "luxury_interior",
-  },
-  {
-    url: "https://images.unsplash.com/photo-1502005229762-cf1b2da7c5d6",
-    filename: "beach_villa",
-  },
-  {
-    url: "https://images.unsplash.com/photo-1613977257363-707ba9348227",
-    filename: "mountain_cabin",
-  },
-];
-
-// Sample static data with embedded images
-const listings = [
-  {
-    id: 1,
-    title: "Modern Luxury Villa",
-    description: "Stunning modern villa with infinity pool",
-    price: 550,
-    location: "Beverly Hills",
-    country: "United States",
-    image: {
-      url: "https://images.unsplash.com/photo-1568605114967-8130f3a36994",
-      filename: "modern_house",
-    },
-    category: "Luxury Villa",
-    rooms: {
-      bedrooms: 4,
-      bathrooms: 3,
-    },
-    capacity: {
-      adults: 8,
-      children: 4,
-      total: 12,
-    },
-    contact: {
-      phone: "+1 234-567-8900",
-      email: "beverly.villa@example.com",
-      host: "John Smith",
-    },
-  },
-  {
-    id: 2,
-    title: "Beachfront Paradise",
-    description: "Direct beach access with private sundeck",
-    price: 450,
-    location: "Maldives",
-    country: "Maldives",
-    image: {
-      url: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6",
-      filename: "luxury_villa",
-    },
-    category: "Beach Resort",
-    rooms: {
-      bedrooms: 2,
-      bathrooms: 2,
-      livingRoom: true,
-      kitchen: true,
-    },
-    capacity: {
-      adults: 4,
-      children: 2,
-      total: 6,
-    },
-    contact: {
-      phone: "+960 123-4567",
-      email: "maldives.paradise@example.com",
-      host: "Sarah Johnson",
-    },
-  },
-  {
-    id: 3,
-    title: "Mountain View Chalet",
-    description: "Cozy chalet with breathtaking mountain views",
-    price: 300,
-    location: "Swiss Alps",
-    country: "Switzerland",
-    image: {
-      url: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750",
-      filename: "mountain_chalet",
-    },
-    category: "Mountain Retreat",
-    rooms: {
-      bedrooms: 3,
-      bathrooms: 2,
-      livingRoom: true,
-      kitchen: true,
-    },
-    capacity: {
-      adults: 6,
-      children: 3,
-      total: 9,
-    },
-    contact: {
-      phone: "+41 123 456 789",
-      email: "swiss.chalet@example.com",
-      host: "Marco Mueller",
-    },
-  },
-  {
-    id: 4,
-    title: "Urban Penthouse",
-    description: "Luxurious penthouse with city skyline views",
-    price: 600,
-    location: "Manhattan",
-    country: "United States",
-    image: {
-      url: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9",
-      filename: "urban_penthouse",
-    },
-  },
-  {
-    id: 5,
-    title: "Tropical Villa Resort",
-    description: "Private villa with tropical garden and pool",
-    price: 400,
-    location: "Bali",
-    country: "Indonesia",
-    image: {
-      url: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c",
-      filename: "tropical_villa",
-    },
-  },
-  {
-    id: 6,
-    title: "Historic Castle Suite",
-    description: "Elegant suite in restored medieval castle",
-    price: 750,
-    location: "Edinburgh",
-    country: "Scotland",
-    image: {
-      url: "https://images.unsplash.com/photo-1613490493576-7fde63acd811",
-      filename: "castle_suite",
-    },
-  },
-  {
-    id: 7,
-    title: "Seaside Cottage",
-    description: "Charming cottage with ocean views",
-    price: 280,
-    location: "Cornwall",
-    country: "United Kingdom",
-    image: {
-      url: "https://images.unsplash.com/photo-1502005229762-cf1b2da7c5d6",
-      filename: "seaside_cottage",
-    },
-  },
-  {
-    id: 8,
-    title: "Desert Oasis Villa",
-    description: "Luxury villa with private pool in the desert",
-    price: 520,
-    location: "Dubai",
-    country: "UAE",
-    image: {
-      url: "https://images.unsplash.com/photo-1613977257363-707ba9348227",
-      filename: "desert_villa",
-    },
-  },
-];
-
 // Debug middleware to check listings data
 app.use((req, res, next) => {
-  console.log(`Number of listings: ${listings.length}`);
-  console.log("First listing sample:", listings[0]);
+  if (sampleListings) {
+    console.log("Debug Info:");
+    console.log(`Number of listings: ${sampleListings.length}`);
+    console.log("First listing title:", sampleListings[0]?.title);
+    console.log(
+      "Available listing IDs:",
+      sampleListings.map((l) => l.id)
+    );
+  } else {
+    console.log("Warning: sampleListings is undefined");
+  }
   next();
 });
 
+// Add this immediately after the import to verify the data
+console.log("INITIAL DATA CHECK:");
+console.log("Type of sampleListings:", typeof sampleListings);
+console.log("Is Array?", Array.isArray(sampleListings));
+console.log("Length:", sampleListings?.length);
+console.log("First item:", sampleListings?.[0]?.title);
+
 // Routes
 app.get("/", (req, res) => {
-  res.render("listings/index", { listings });
+  try {
+    if (!Array.isArray(sampleListings)) {
+      throw new Error("sampleListings is not an array");
+    }
+    console.log("Rendering home with", sampleListings.length, "listings");
+    res.render("listings/index", {
+      listings: sampleListings,
+      totalListings: sampleListings.length,
+    });
+  } catch (error) {
+    console.error("Error in root route:", error);
+    res.status(500).send("Something went wrong!");
+  }
 });
 
 app.get("/listings", (req, res) => {
-  res.render("listings/index", { listings });
+  try {
+    if (!Array.isArray(sampleListings)) {
+      throw new Error("sampleListings is not an array");
+    }
+    console.log("Rendering listings with", sampleListings.length, "listings");
+    res.render("listings/index", {
+      listings: sampleListings,
+      totalListings: sampleListings.length,
+    });
+  } catch (error) {
+    console.error("Error in listings route:", error);
+    res.status(500).send("Something went wrong!");
+  }
 });
 
 app.get("/listings/:id", (req, res) => {
-  const listing =
-    listings.find((l) => l.id === parseInt(req.params.id)) || listings[0];
-  res.render("listings/show", { listing });
+  try {
+    const { id } = req.params;
+    console.log("Looking for listing:", id);
+
+    const listing = sampleListings.find((l) => l.id === parseInt(id));
+
+    if (!listing) {
+      console.log("Listing not found");
+      return res.status(404).send("Listing not found");
+    }
+
+    console.log("Found listing:", listing);
+    res.render("listings/show", { listing });
+  } catch (err) {
+    console.error("Error in show route:", err);
+    res.status(500).send("Something went wrong!");
+  }
 });
 
 // Search route
 app.get("/search", (req, res) => {
   const searchTerm = req.query.country || "";
-  const filteredListings = listings.filter((listing) =>
+  const filteredListings = sampleListings.filter((listing) =>
     listing.country.toLowerCase().includes(searchTerm.toLowerCase())
   );
   res.render("results", { listings: filteredListings, search: searchTerm });
@@ -263,6 +130,87 @@ app.get("/search", (req, res) => {
 app.get("/test-flash", (req, res) => {
   req.flash("success", "This is a test success message!");
   res.redirect("/listings");
+});
+
+// Booking routes
+app.get("/listings/:id", (req, res) => {
+  try {
+    const { id } = req.params;
+    console.log("Requested booking for listing ID:", id);
+
+    const listing = sampleListings.find((l) => l.id === parseInt(id));
+    console.log("Found listing:", listing);
+
+    if (!listing) {
+      console.log("No listing found for ID:", id);
+      return res.status(404).send("Listing not found");
+    }
+
+    res.render("listings", { listing });
+  } catch (err) {
+    console.error("Error in booking route:", err);
+    res.status(500).send("Error loading booking page");
+  }
+});
+
+app.post("/listings/:id", (req, res) => {
+  try {
+    const { id } = req.params;
+    const booking = req.body.booking;
+    console.log("New booking received:", booking);
+
+    // Here you would normally save the booking to your database
+
+    req.flash("success", "Booking confirmed!");
+    res.redirect(`/listings/${id}`);
+  } catch (err) {
+    console.error("Booking error:", err);
+    req.flash("error", "Failed to process booking");
+    res.redirect(`/listings/${id}`);
+  }
+});
+
+// Add this route to check what listings are available
+app.get("/debug/listings", (req, res) => {
+  res.json(sampleListings);
+});
+
+// Add this debug route to verify your data
+app.get("/debug/data", (req, res) => {
+  res.json({
+    totalListings: sampleListings.length,
+    listings: sampleListings,
+  });
+});
+
+// Comment out Razorpay initialization
+/*
+const razorpay = new Razorpay({
+  key_id: "rzp_test_YourTestKeyId",
+  key_secret: "YourTestKeySecret",
+});
+*/
+
+// Comment out payment routes
+/*
+app.post("/listings/:id/pay", async (req, res) => {
+  // ... payment code ...
+});
+
+app.post("/verify-payment", async (req, res) => {
+  // ... verification code ...
+});
+*/
+
+// Add this new route near your other routes
+app.get("/test-data", (req, res) => {
+  res.json({
+    success: true,
+    count: sampleListings.length,
+    data: sampleListings,
+    isArray: Array.isArray(sampleListings),
+    firstItem: sampleListings[0],
+  });
 });
 
 // Basic error handling
