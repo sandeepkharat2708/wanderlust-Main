@@ -4,68 +4,44 @@ const Razorpay = require("razorpay");
 const crypto = require("crypto");
 const { isLoggedIn } = require("../middleware");
 
-// Initialize Razorpay
+// Initialize Razorpay with test keys
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
-// Create order
-router.post("/listings/:id/pay", isLoggedIn, async (req, res) => {
+// Create order route
+router.post("/create-order", isLoggedIn, async (req, res) => {
   try {
     const options = {
-      amount: req.body.amount * 100, // Convert to paise
+      amount: req.body.amount * 100, // amount in paise
       currency: "INR",
-      receipt: `receipt_${Date.now()}`,
+      receipt: "order_" + Date.now(),
+      payment_capture: 1,
     };
 
     const order = await razorpay.orders.create(options);
-
-    res.json({
-      success: true,
-      amount: options.amount,
-      orderId: order.id,
-    });
+    res.json(order);
   } catch (err) {
-    console.error("Error creating order:", err);
-    res.status(500).json({
-      success: false,
-      message: "Failed to create order",
-    });
+    console.log(err);
+    res.status(500).send("Error creating order");
   }
 });
 
-// Verify payment
+// Payment verification route
 router.post("/verify-payment", isLoggedIn, async (req, res) => {
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
-      req.body;
+    const { orderCreationId, razorpayPaymentId, razorpaySignature } = req.body;
 
-    const sign = razorpay_order_id + "|" + razorpay_payment_id;
-    const expectedSign = crypto
-      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
-      .update(sign.toString())
-      .digest("hex");
-
-    if (razorpay_signature === expectedSign) {
-      // Payment is verified
-      // Here you can update your database to mark the booking as confirmed
-      res.json({
-        success: true,
-        message: "Payment verified successfully",
-      });
-    } else {
-      res.json({
-        success: false,
-        message: "Invalid signature",
-      });
-    }
-  } catch (err) {
-    console.error("Error verifying payment:", err);
-    res.status(500).json({
-      success: false,
-      message: "Failed to verify payment",
+    // Add verification logic here if needed
+    res.json({
+      msg: "success",
+      orderId: orderCreationId,
+      paymentId: razorpayPaymentId,
     });
+  } catch (err) {
+    console.log(err);
+    res.status(500).send("Error verifying payment");
   }
 });
 

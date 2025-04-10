@@ -104,7 +104,7 @@
               <button 
                 class="btn btn-success btn-lg w-100 mb-3" 
                 id="bookingBtn"
-                onclick="makePayment('<%= listing._id %>', <%= listing.price %>)"
+                onclick="makePayment()"
               >
                 <i class="fas fa-credit-card me-2"></i>Book Now - ₹<%= listing.price %>
               </button>
@@ -539,85 +539,38 @@
 </script>
 
 <script>
-async function makePayment(listingId, price) {
-  try {
-    // Get order details from server
-    const response = await fetch(`/listings/${listingId}/pay`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ amount: price })
-    });
-    
-    const order = await response.json();
-    
-    if(!order.success) {
-      throw new Error(order.message);
+function makePayment() {
+  const options = {
+    key: "<%= process.env.RAZORPAY_KEY_ID %>", // Enter the Test Key ID
+    amount: <%= listing.price * 100 %>, // Amount in paise
+    currency: "INR",
+    name: "WanderLust",
+    description: "Test Transaction",
+    image: "https://example.com/your_logo",
+    handler: function (response) {
+      alert("Payment successful! Payment ID: " + response.razorpay_payment_id);
+      // You can redirect or show success message here
+      window.location.href = "/listings";
+    },
+    prefill: {
+      name: "<%= currentUser.username %>",
+      email: "<%= currentUser.email %>",
+      contact: "9999999999" // Add a default test number
+    },
+    notes: {
+      address: "WanderLust Corporate Office"
+    },
+    theme: {
+      color: "#2ecc71"
     }
+  };
 
-    const options = {
-      key: '<%= process.env.RAZORPAY_KEY_ID %>', // Your Razorpay Key ID
-      amount: order.amount,
-      currency: "INR",
-      name: "WanderLust",
-      description: "Property Booking Payment",
-      order_id: order.orderId,
-      handler: async function (response) {
-        try {
-          // Verify payment
-          const verifyResponse = await fetch('/verify-payment', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature
-            })
-          });
-
-          const verifyResult = await verifyResponse.json();
-
-          if(verifyResult.success) {
-            showAlert('success', 'Payment successful! Booking confirmed.');
-            setTimeout(() => {
-              window.location.href = '/listings';
-            }, 2000);
-          } else {
-            throw new Error('Payment verification failed');
-          }
-        } catch(err) {
-          showAlert('error', 'Payment verification failed. Please contact support.');
-        }
-      },
-      prefill: {
-        name: '<%= currentUser ? currentUser.username : "" %>',
-        email: '<%= currentUser ? currentUser.email : "" %>'
-      },
-      theme: {
-        color: "#2ecc71"
-      }
-    };
-
-    const razorpay = new Razorpay(options);
-    razorpay.open();
-
-  } catch(err) {
-    showAlert('error', 'Failed to initialize payment. Please try again.');
-  }
-}
-
-function showAlert(type, message) {
-  const alertDiv = document.createElement('div');
-  alertDiv.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed top-0 end-0 m-3`;
-  alertDiv.innerHTML = `
-    ${message}
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-  `;
-  document.body.appendChild(alertDiv);
-  setTimeout(() => alertDiv.remove(), 5000);
+  const rzp = new Razorpay(options);
+  rzp.on('payment.failed', function (response){
+    alert("Payment failed! Please try again.");
+  });
+  
+  rzp.open();
 }
 </script>
 
