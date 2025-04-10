@@ -5,74 +5,77 @@
   const coordinates = [0, 0]; // Default coordinates
 </script>
 
-<div class="container">
-  <div class="row mt-3">
-    <!-- Main Listing Info -->
-    <div class="col-lg-8 col-md-12">
+<div class="container mt-4">
+  <div class="row">
+    <!-- Left Column - Listing Details -->
+    <div class="col-lg-8">
       <div class="card listing-card">
         <img
-          src="<%= listing.image?.url || 'https://images.unsplash.com/photo-1566073771259-6a8506099945' %>"
+          src="<%= listing.image.url %>"
           class="card-img-top show-img"
           alt="<%= listing.title %>"
         />
         <div class="card-body">
-          <h3 class="card-title"><%= listing.title %></h3>
+          <h2 class="card-title"><%= listing.title %></h2>
           <p class="text-muted">
-            <i class="fas fa-map-marker-alt me-2"></i>
+            <i class="fas fa-map-marker-alt"></i>
             <%= listing.location %>, <%= listing.country %>
           </p>
-          <h5 class="card-text mb-3">₹<%= listing.price %> / night</h5>
           <p class="card-text"><%= listing.description %></p>
         </div>
       </div>
     </div>
 
-    <!-- Booking Card -->
-    <div class="col-lg-4 col-md-12">
-      <div class="card shadow booking-card">
+    <!-- Right Column - Booking Card -->
+    <div class="col-lg-4">
+      <div class="card booking-card">
         <div class="card-body">
-          <h4 class="card-title text-center mb-4">Book This Place</h4>
+          <h5 class="card-title">
+            <span class="price">₹<%= listing.price %></span>
+            <span class="text-muted">/night</span>
+          </h5>
 
-          <!-- Price Info -->
-          <div class="price-info mb-3">
-            <h5>
-              ₹<%= listing.price %> <small class="text-muted">/night</small>
-            </h5>
-          </div>
-
-          <!-- Quick Details -->
-          <div class="details-info mb-3">
-            <% if (listing.rooms) { %>
-            <p>
-              <i class="fas fa-bed me-2"></i><%= listing.rooms.bedrooms || 1 %>
-              Bedrooms
-            </p>
-            <% } %> <% if (listing.capacity) { %>
-            <p>
-              <i class="fas fa-users me-2"></i>Up to <%= listing.capacity.total
-              || 2 %> guests
-            </p>
-            <% } %>
-          </div>
-
-          <hr />
-
-          <!-- Price Calculation -->
-          <div class="price-calc mb-4">
-            <div class="d-flex justify-content-between mb-2">
-              <span>Base price</span>
-              <span>₹<%= listing.price %></span>
+          <!-- Booking Form -->
+          <form class="mt-4">
+            <div class="mb-3">
+              <label class="form-label">Check-in</label>
+              <input type="date" class="form-control" required />
             </div>
-            <div class="d-flex justify-content-between fw-bold">
-              <span>Total</span>
-              <span>₹<%= listing.price %></span>
+            <div class="mb-3">
+              <label class="form-label">Check-out</label>
+              <input type="date" class="form-control" required />
             </div>
-          </div>
+            <div class="mb-3">
+              <label class="form-label">Guests</label>
+              <select class="form-select">
+                <% for(let i = 1; i <= (listing.capacity?.total || 2); i++) { %>
+                <option value="<%= i %>">
+                  <%= i %> guest<%= i > 1 ? 's' : '' %>
+                </option>
+                <% } %>
+              </select>
+            </div>
+            <button class="btn btn-success w-100">Reserve Now</button>
+          </form>
 
-          <!-- Pay Now Button -->
-          <button class="btn btn-success btn-lg w-100" id="payButton">
-            <i class="fas fa-credit-card me-2"></i>Pay Now
-          </button>
+          <!-- Property Details -->
+          <div class="property-details mt-4">
+            <h6>Property Details:</h6>
+            <ul class="list-unstyled">
+              <li>
+                <i class="fas fa-bed"></i> <%= listing.rooms.bedrooms %>
+                Bedrooms
+              </li>
+              <li>
+                <i class="fas fa-bath"></i> <%= listing.rooms.bathrooms %>
+                Bathrooms
+              </li>
+              <li>
+                <i class="fas fa-users"></i> Up to <%= listing.capacity.total %>
+                guests
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>
@@ -83,57 +86,58 @@
   .show-img {
     height: 400px;
     object-fit: cover;
-    border-radius: 15px 15px 0 0;
   }
 
   .listing-card {
     border: none;
-    border-radius: 15px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
   }
 
   .booking-card {
     border: none;
-    border-radius: 15px;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
     position: sticky;
     top: 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .price {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #2ecc71;
+  }
+
+  .property-details li {
+    margin-bottom: 10px;
+    color: #666;
+  }
+
+  .property-details i {
+    color: #2ecc71;
+    margin-right: 10px;
+    width: 20px;
   }
 
   .btn-success {
-    background-color: #2ecc71;
+    background: #2ecc71;
     border: none;
-    padding: 15px;
-    font-size: 1.1rem;
+    padding: 12px;
     font-weight: 500;
     transition: all 0.3s ease;
   }
 
   .btn-success:hover {
-    background-color: #27ae60;
+    background: #27ae60;
     transform: translateY(-2px);
   }
 
-  .details-info i {
-    color: #2ecc71;
-  }
+  @media (max-width: 768px) {
+    .show-img {
+      height: 300px;
+    }
 
-  .price-calc {
-    background-color: #f8f9fa;
-    padding: 15px;
-    border-radius: 10px;
-  }
-
-  .price-info h5 {
-    color: #2ecc71;
-    font-size: 1.5rem;
-  }
-
-  @media (max-width: 992px) {
     .booking-card {
       position: static;
-      margin-bottom: 20px;
+      margin-top: 20px;
     }
   }
 </style>

@@ -81,17 +81,19 @@
 
     <!-- Listings Grid -->
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4">
-      <% listings.forEach(function(listing) { %>
+      <% listings.forEach(function(listing, index) { %>
       <div class="col">
         <div class="card listing-card h-100">
           <!-- Image and Category -->
           <div class="position-relative">
             <img
-              src="<%= listing.image?.url || 'https://images.unsplash.com/photo-1566073771259-6a8506099945' %>"
+              src="<%= listing.image.url %>"
               class="card-img-top listing-image"
               alt="<%= listing.title %>"
             />
-            <span class="category-badge"> <%= listing.category %> </span>
+            <span class="category-badge"
+              ><%= listing.category || 'Uncategorized' %></span
+            >
             <button class="btn btn-like position-absolute">
               <i class="far fa-heart"></i>
             </button>
@@ -106,7 +108,9 @@
                 <%= listing.location %>, <%= listing.country %>
               </p>
               <div class="price">
-                <span class="amount">₹<%= listing.price %></span>
+                <span class="amount" data-base-price="<%= listing.price %>"
+                  >₹<%= listing.price %></span
+                >
                 <span class="period">/ night</span>
               </div>
             </div>
@@ -132,7 +136,7 @@
 
           <!-- Book Now Button -->
           <div class="card-footer">
-            <a href="/listings/<%= listing.id %>" class="btn btn-book w-100">
+            <a href="/listings/<%= index + 1 %>" class="btn btn-book w-100">
               Book Now
             </a>
           </div>
@@ -227,6 +231,7 @@
     border-radius: 25px;
     border: 1px solid #ddd;
     height: 45px;
+    transition: all 0.3s ease;
   }
 
   .search-input:focus {
@@ -508,9 +513,64 @@
       background-color: #444;
     }
   }
+
+  #no-results {
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
 </style>
 
 <script>
+  // Add this search functionality at the top of your existing script
+  document
+    .querySelector(".search-input")
+    .addEventListener("input", function (e) {
+      const searchTerm = e.target.value.toLowerCase().trim();
+      const listingCards = document.querySelectorAll(".listing-card");
+
+      listingCards.forEach((card) => {
+        const title = card
+          .querySelector(".card-title")
+          .textContent.toLowerCase();
+        const location = card
+          .querySelector(".location")
+          .textContent.toLowerCase();
+        const parent = card.closest(".col");
+
+        // Check if the search term matches title or location
+        if (title.includes(searchTerm) || location.includes(searchTerm)) {
+          parent.style.display = ""; // Show the card
+        } else {
+          parent.style.display = "none"; // Hide the card
+        }
+      });
+
+      // Show a message if no results found
+      const visibleCards = document.querySelectorAll('.col[style=""]').length;
+      const noResultsMsg = document.getElementById("no-results");
+
+      if (visibleCards === 0 && searchTerm !== "") {
+        if (!noResultsMsg) {
+          const msg = document.createElement("div");
+          msg.id = "no-results";
+          msg.className = "col-12 text-center py-4";
+          msg.innerHTML =
+            '<p class="text-muted">No matching properties found</p>';
+          document.querySelector(".row.row-cols-1").appendChild(msg);
+        }
+      } else if (noResultsMsg) {
+        noResultsMsg.remove();
+      }
+    });
+
   // Only handle the tax toggle functionality
   document.getElementById("taxToggle").addEventListener("change", function (e) {
     const showTaxes = e.target.checked;

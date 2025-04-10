@@ -1,5 +1,6 @@
 const sampleListings = [
   {
+    id: "1",
     title: "Cozy Mountain Cabin",
     description: "A beautiful cabin with scenic views of the mountains.",
     image: {
@@ -19,6 +20,7 @@ const sampleListings = [
     },
   },
   {
+    id: "2",
     title: "Luxury Beach Villa",
     description: "Stunning beachfront villa with private access to the shore.",
     image: {
@@ -38,6 +40,7 @@ const sampleListings = [
     },
   },
   {
+    id: "3",
     title: "Modern City Apartment",
     description: "Sleek apartment in the heart of the city with skyline views.",
     image: {
@@ -57,6 +60,7 @@ const sampleListings = [
     },
   },
   {
+    id: "4",
     title: "Hillside Retreat",
     description: "Peaceful retreat with panoramic views of the valley.",
     image: {
@@ -76,6 +80,7 @@ const sampleListings = [
     },
   },
   {
+    id: "5",
     title: "Poolside Paradise",
     description: "Luxurious villa with a private infinity pool.",
     image: {
@@ -95,6 +100,7 @@ const sampleListings = [
     },
   },
   {
+    id: "6",
     title: "Lakefront Lodge",
     description: "Serene lodge overlooking a pristine lake.",
     image: {
@@ -114,6 +120,7 @@ const sampleListings = [
     },
   },
   {
+    id: "7",
     title: "Desert Oasis",
     description: "Luxury camp in the heart of the desert.",
     image: {
@@ -133,6 +140,7 @@ const sampleListings = [
     },
   },
   {
+    id: "8",
     title: "Forest Treehouse",
     description: "Unique treehouse experience in a lush forest.",
     image: {
@@ -152,6 +160,7 @@ const sampleListings = [
     },
   },
   {
+    id: "9",
     title: "Heritage Haveli",
     description: "Historic haveli converted into a luxury stay.",
     image: {
@@ -171,6 +180,7 @@ const sampleListings = [
     },
   },
   {
+    id: "10",
     title: "Riverside Cottage",
     description: "Charming cottage next to a flowing river.",
     image: {
@@ -190,6 +200,7 @@ const sampleListings = [
     },
   },
   {
+    id: "11",
     title: "Tea Estate Bungalow",
     description: "Colonial bungalow surrounded by tea plantations.",
     image: {
@@ -209,6 +220,7 @@ const sampleListings = [
     },
   },
   {
+    id: "12",
     title: "Beachfront Hut",
     description: "Simple but charming hut right on the beach.",
     image: {

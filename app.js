@@ -100,20 +100,24 @@ app.get("/listings", (req, res) => {
 app.get("/listings/:id", (req, res) => {
   try {
     const { id } = req.params;
-    console.log("Looking for listing:", id);
+    console.log("Requested listing ID:", id);
 
-    const listing = sampleListings.find((l) => l.id === parseInt(id));
+    // Convert id to zero-based index
+    const listingIndex = parseInt(id) - 1;
+    const listing = sampleListings[listingIndex];
+
+    console.log("Found listing:", listing ? "yes" : "no");
 
     if (!listing) {
-      console.log("Listing not found");
-      return res.status(404).send("Listing not found");
+      console.log("Listing not found for ID:", id);
+      return res.redirect("/listings");
     }
 
-    console.log("Found listing:", listing);
+    // Render the show template
     res.render("listings/show", { listing });
   } catch (err) {
     console.error("Error in show route:", err);
-    res.status(500).send("Something went wrong!");
+    res.redirect("/listings");
   }
 });
 
@@ -172,7 +176,13 @@ app.post("/listings/:id", (req, res) => {
 
 // Add this route to check what listings are available
 app.get("/debug/listings", (req, res) => {
-  res.json(sampleListings);
+  res.json({
+    total: sampleListings.length,
+    listings: sampleListings.map((l) => ({
+      id: l.id,
+      title: l.title,
+    })),
+  });
 });
 
 // Add this debug route to verify your data
@@ -180,6 +190,19 @@ app.get("/debug/data", (req, res) => {
   res.json({
     totalListings: sampleListings.length,
     listings: sampleListings,
+  });
+});
+
+// Add this debug route
+app.get("/debug/listing/:id", (req, res) => {
+  const { id } = req.params;
+  const listing = sampleListings.find(
+    (l) => l.id === parseInt(id) || l._id === id
+  );
+  res.json({
+    requestedId: id,
+    listing: listing || null,
+    allListings: sampleListings.map((l) => ({ id: l.id, title: l.title })),
   });
 });
 
